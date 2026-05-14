@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>The Lab — Byron Gronseth</title>
+  <meta name="description" content="Live projects, prototypes, and things Byron Gronseth is building in the open. Design-led, AI-assisted, always in motion." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --ink-900: #0f0e0c;
+      --ink-700: #3a3832;
+      --ink-500: #7a7469;
+      --ink-300: #c4bfb6;
+      --paper-100: #f5f2ec;
+      --paper-200: #ede9e1;
+      --paper-300: #ddd9d1;
+      --gold: #b8963e;
+      --gold-pale: #f0e6ce;
+      --terra: #b84c2e;
+      --terra-pale: #f5e6e1;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 300;
+      background: var(--paper-100);
+      color: var(--ink-900);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Masthead ── */
+    .masthead {
+      background: var(--ink-900);
+      padding: 2rem 2.5rem 1.75rem;
+      border-bottom: 1px solid var(--ink-700);
+    }
+
+    .masthead-eyebrow {
+      font-family: 'DM Mono', monospace;
+      font-size: 9px;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      color: var(--ink-500);
+      text-transform: uppercase;
+      margin-bottom: 0.4rem;
+    }
+
+    .masthead-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: clamp(32px, 5vw, 52px);
+      color: var(--gold-pale);
+      line-height: 1.1;
+      margin-bottom: 0.5rem;
+    }
+
+    .masthead-sub {
+      font-size: 13px;
+      color: var(--ink-500);
+      font-weight: 300;
+      max-width: 480px;
+      line-height: 1.6;
+    }
+
+    .masthead-nav {
+      margin-top: 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+    }
+
+    .nav-link {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      font-weight: 500;
+      color: var(--ink-500);
+      text-decoration: none;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      transition: color 0.15s;
+    }
+
+    .nav-link:hover { color: var(--gold-pale); }
+    .nav-link.active { color: var(--gold); }
+
+    .nav-dot {
+      width: 3px;
+      height: 3px;
+      border-radius: 50%;
+      background: var(--ink-700);
+    }
+
+    /* ── Metrics bar ── */
+    .metrics-bar {
+      background: var(--paper-200);
+      border-bottom: 0.5px solid var(--ink-300);
+      padding: 0.6rem 2.5rem;
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+      flex-wrap: wrap;
+    }
+
+    .metric-item { display: flex; align-items: center; gap: 0.5rem; }
+
+    .metric-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 9px;
+      font-weight: 500;
+      color: var(--ink-500);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .metric-value {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--gold);
+    }
+
+    .metric-sep {
+      width: 0.5px;
+      height: 14px;
+      background: var(--ink-300);
+    }
+
+    /* ── Main ── */
+    main {
+      padding: 2.5rem;
+      flex: 1;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 1.5rem;
+    }
+
+    .section-kicker {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      font-weight: 500;
+      color: var(--ink-500);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    .section-count {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      color: var(--ink-300);
+    }
+
+    /* ── Project cards ── */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1px;
+      background: var(--paper-300);
+      border: 0.5px solid var(--paper-300);
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 3rem;
+    }
+
+    .project-card {
+      background: var(--paper-100);
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      min-height: 220px;
+      text-decoration: none;
+      color: inherit;
+      transition: background 0.15s;
+    }
+
+    .project-card:hover { background: var(--paper-200); }
+
+    .card-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+    }
+
+    .card-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+    }
+
+    .icon-gold { background: var(--gold-pale); color: var(--gold); }
+    .icon-terra { background: var(--terra-pale); color: var(--terra); }
+
+    .card-status {
+      font-family: 'DM Mono', monospace;
+      font-size: 9px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      padding: 3px 8px;
+      border-radius: 4px;
+    }
+
+    .status-active { background: var(--gold-pale); color: var(--gold); }
+    .status-beta   { background: var(--terra-pale); color: var(--terra); }
+
+    .card-body { flex: 1; }
+
+    .card-name {
+      font-family: 'DM Serif Display', serif;
+      font-size: 22px;
+      color: var(--ink-900);
+      margin-bottom: 0.35rem;
+      line-height: 1.2;
+    }
+
+    .card-desc {
+      font-size: 13px;
+      color: var(--ink-500);
+      line-height: 1.65;
+      font-weight: 300;
+    }
+
+    .card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 0.75rem;
+      border-top: 0.5px solid var(--paper-300);
+    }
+
+    .card-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+
+    .tag {
+      font-family: 'DM Mono', monospace;
+      font-size: 9px;
+      font-weight: 400;
+      color: var(--ink-500);
+      background: var(--paper-200);
+      padding: 2px 7px;
+      border-radius: 3px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .card-link {
+      font-family: 'DM Mono', monospace;
+      font-size: 9px;
+      color: var(--ink-300);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      transition: color 0.15s;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      white-space: nowrap;
+    }
+
+    .project-card:hover .card-link { color: var(--gold); }
+    .card-link i { font-size: 12px; }
+
+    /* ── Bench list ── */
+    .wip-section { margin-bottom: 3rem; }
+
+    .wip-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5px;
+      background: var(--paper-300);
+      border: 0.5px solid var(--paper-300);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .wip-item {
+      background: var(--paper-100);
+      padding: 1rem 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .wip-num {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      color: var(--ink-300);
+      min-width: 20px;
+    }
+
+    .wip-name {
+      font-size: 14px;
+      color: var(--ink-700);
+      flex: 1;
+      font-weight: 400;
+    }
+
+    .wip-type {
+      font-family: 'DM Mono', monospace;
+      font-size: 9px;
+      color: var(--ink-300);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    /* ── Footer ── */
+    footer {
+      background: var(--ink-900);
+      padding: 1.25rem 2.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+
+    .footer-name {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      color: var(--ink-700);
+      letter-spacing: 0.06em;
+    }
+
+    .footer-link {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      color: var(--ink-500);
+      text-decoration: none;
+      letter-spacing: 0.06em;
+      transition: color 0.15s;
+    }
+
+    .footer-link:hover { color: var(--gold); }
+
+    /* ── Responsive ── */
+    @media (max-width: 600px) {
+      .masthead, main, .metrics-bar, footer { padding-left: 1.25rem; padding-right: 1.25rem; }
+      .metrics-bar { gap: 1rem; }
+      .metric-sep { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="masthead">
+    <div class="masthead-eyebrow">Byron Gronseth — experiments.byrongronseth.com</div>
+    <h1 class="masthead-title">The Lab</h1>
+    <p class="masthead-sub">Live projects, prototypes, and things I'm building in the open. Design-led, AI-assisted, always in motion.</p>
+    <nav class="masthead-nav" aria-label="Primary">
+      <a href="#" class="nav-link active">Projects</a>
+      <div class="nav-dot" aria-hidden="true"></div>
+      <a href="https://byrongronseth.com" class="nav-link">Portfolio</a>
+    </nav>
+  </header>
+
+  <div class="metrics-bar" role="region" aria-label="Page stats">
+    <div class="metric-item">
+      <span class="metric-label">Projects</span>
+      <span class="metric-value">02</span>
+    </div>
+    <div class="metric-sep" aria-hidden="true"></div>
+    <div class="metric-item">
+      <span class="metric-label">Stack</span>
+      <span class="metric-value">Lovable · Figma · Claude</span>
+    </div>
+    <div class="metric-sep" aria-hidden="true"></div>
+    <div class="metric-item">
+      <span class="metric-label">Updated</span>
+      <span class="metric-value">May 2026</span>
+    </div>
+  </div>
+
+  <main>
+
+    <div class="section-header">
+      <span class="section-kicker">01 — Live Projects</span>
+      <span class="section-count">2 active</span>
+    </div>
+
+    <div class="cards-grid">
+
+      <a href="https://recall-test.lovable.app/" target="_blank" rel="noopener noreferrer" class="project-card">
+        <div class="card-top">
+          <div class="card-icon icon-gold" aria-hidden="true">
+            <i class="ti ti-bookmark"></i>
+          </div>
+          <span class="card-status status-active">Active</span>
+        </div>
+        <div class="card-body">
+          <h2 class="card-name">Recall</h2>
+          <p class="card-desc">A personal knowledge tool for capturing and resurfacing what matters — articles, ideas, references — with AI assist built in from the start.</p>
+        </div>
+        <div class="card-footer">
+          <div class="card-tags">
+            <span class="tag">Lovable</span>
+            <span class="tag">Knowledge</span>
+            <span class="tag">AI</span>
+          </div>
+          <span class="card-link" aria-label="Visit Recall at recall-test.lovable.app">recall-test.lovable.app <i class="ti ti-external-link" aria-hidden="true"></i></span>
+        </div>
+      </a>
+
+      <a href="https://nixology.app" target="_blank" rel="noopener noreferrer" class="project-card">
+        <div class="card-top">
+          <div class="card-icon icon-terra" aria-hidden="true">
+            <i class="ti ti-salad"></i>
+          </div>
+          <span class="card-status status-beta">Beta</span>
+        </div>
+        <div class="card-body">
+          <h2 class="card-name">Nixology</h2>
+          <p class="card-desc">Meal planning that doesn't feel like homework. A smarter approach to deciding what to eat, with recipes and grocery logic that actually fit your life.</p>
+        </div>
+        <div class="card-footer">
+          <div class="card-tags">
+            <span class="tag">Lovable</span>
+            <span class="tag">Food</span>
+            <span class="tag">Utility</span>
+          </div>
+          <span class="card-link" aria-label="Visit Nixology at nixology.app">nixology.app <i class="ti ti-external-link" aria-hidden="true"></i></span>
+        </div>
+      </a>
+
+    </div>
+
+    <div class="wip-section">
+      <div class="section-header">
+        <span class="section-kicker">02 — On the Bench</span>
+        <span class="section-count">coming soon</span>
+      </div>
+      <ul class="wip-list" role="list">
+        <li class="wip-item">
+          <span class="wip-num">01</span>
+          <span class="wip-name">Recruiter Hub</span>
+          <span class="wip-type">Product Design</span>
+        </li>
+        <li class="wip-item">
+          <span class="wip-num">02</span>
+          <span class="wip-name">Candidate Experience</span>
+          <span class="wip-type">Product Design</span>
+        </li>
+        <li class="wip-item">
+          <span class="wip-num">03</span>
+          <span class="wip-name">Screenshot Tool</span>
+          <span class="wip-type">Agent</span>
+        </li>
+        <li class="wip-item">
+          <span class="wip-num">04</span>
+          <span class="wip-name">WILD</span>
+          <span class="wip-type">Game System</span>
+        </li>
+      </ul>
+    </div>
+
+  </main>
+
+  <footer>
+    <span class="footer-name">Byron Gronseth — Digital Design Director</span>
+    <a href="https://byrongronseth.com" class="footer-link">← Main portfolio</a>
+  </footer>
+
+</body>
+</html>
