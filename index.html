@@ -4,477 +4,1085 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Experiments — Byron A. Gronseth</title>
-  <meta name="description" content="Live projects, prototypes, and things I'm building in the open. Design-led, AI-assisted, always in motion." />
+  <meta name="description" content="A private archive of works in progress. Design-led, AI-assisted." />
+
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@200;300;400;500&family=JetBrains+Mono:wght@300;400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet" />
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            ink: '#0c0b09',
+            'ink-2': '#100f0c',
+            'ink-3': '#15140f',
+            'ink-line': '#211f1a',
+            'ink-line-2': '#2b2820',
+            ash: '#5a564c',
+            'ash-2': '#8a8473',
+            bone: '#e8e3d6',
+            gold: '#c9a84c',
+            'gold-pale': '#e2c87f',
+            'gold-dim': '#7a6431',
+          },
+          fontFamily: {
+            display: ['"Inter Tight"', 'system-ui', 'sans-serif'],
+            sans: ['"Inter Tight"', 'system-ui', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+            italic: ['"Instrument Serif"', 'serif'],
+          },
+          letterSpacing: {
+            'razor': '0.32em',
+            'wide-2': '0.22em',
+          },
+        }
+      }
+    }
+  </script>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+  <!-- Framer Motion UMD -->
+  <script src="https://cdn.jsdelivr.net/npm/framer-motion@10.18.0/dist/framer-motion.js"></script>
+
+  <!-- Lenis smooth scroll -->
+  <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.20/dist/lenis.min.js"></script>
+
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    :root {
-      --ink-900: #0f0e0c;
-      --ink-700: #3a3832;
-      --ink-500: #7a7469;
-      --ink-300: #c4bfb6;
-      --paper-100: #f5f2ec;
-      --paper-200: #ede9e1;
-      --paper-300: #ddd9d1;
-      --gold: #b8963e;
-      --gold-pale: #f0e6ce;
-      --terra: #b84c2e;
-      --terra-pale: #f5e6e1;
-    }
-
-    html { scroll-behavior: smooth; }
-
-    body {
-      font-family: 'DM Sans', sans-serif;
+    html, body {
+      background: #0c0b09;
+      color: #e8e3d6;
+      font-family: 'Inter Tight', system-ui, sans-serif;
       font-weight: 300;
-      background: var(--paper-100);
-      color: var(--ink-900);
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      overscroll-behavior: none;
     }
 
-    /* ── Masthead ── */
-    .masthead {
-      background: var(--ink-900);
-      padding: 2rem 2.5rem 1.75rem;
-      border-bottom: 1px solid var(--ink-700);
+    /* Lenis required */
+    html.lenis, html.lenis body { height: auto; }
+    .lenis.lenis-smooth { scroll-behavior: auto !important; }
+    .lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
+    .lenis.lenis-stopped { overflow: hidden; }
+    .lenis.lenis-smooth iframe { pointer-events: none; }
+
+    ::selection { background: #c9a84c; color: #0c0b09; }
+
+    /* hide native cursor only on pointer-fine devices */
+    @media (pointer: fine) {
+      body.has-cursor, body.has-cursor * { cursor: none !important; }
     }
 
-    .masthead-eyebrow {
-      font-family: 'DM Mono', monospace;
-      font-size: 9px;
-      font-weight: 500;
-      letter-spacing: 0.12em;
-      color: var(--ink-500);
-      text-transform: uppercase;
-      margin-bottom: 0.4rem;
-    }
-
-    .masthead-title {
-      font-family: 'DM Serif Display', serif;
-      font-size: clamp(32px, 5vw, 52px);
-      color: var(--gold-pale);
-      line-height: 1.1;
-      margin-bottom: 0.5rem;
-    }
-
-    .masthead-sub {
-      font-size: 13px;
-      color: var(--ink-500);
-      font-weight: 300;
-      max-width: 480px;
-      line-height: 1.6;
-    }
-
-    .masthead-nav {
-      margin-top: 1.25rem;
-      display: flex;
-      align-items: center;
-      gap: 1.5rem;
-    }
-
-    .nav-link {
-      font-family: 'DM Mono', monospace;
+    /* Razor caps utility */
+    .caps {
+      font-family: 'JetBrains Mono', monospace;
       font-size: 10px;
-      font-weight: 500;
-      color: var(--ink-500);
-      text-decoration: none;
-      letter-spacing: 0.08em;
+      letter-spacing: 0.32em;
       text-transform: uppercase;
-      transition: color 0.15s;
-    }
-
-    .nav-link:hover { color: var(--gold-pale); }
-    .nav-link.active { color: var(--gold); }
-
-    .nav-dot {
-      width: 3px;
-      height: 3px;
-      border-radius: 50%;
-      background: var(--ink-700);
-    }
-
-    /* ── Metrics bar ── */
-    .metrics-bar {
-      background: var(--paper-200);
-      border-bottom: 0.5px solid var(--ink-300);
-      padding: 0.6rem 2.5rem;
-      display: flex;
-      align-items: center;
-      gap: 2rem;
-      flex-wrap: wrap;
-    }
-
-    .metric-item { display: flex; align-items: center; gap: 0.5rem; }
-
-    .metric-label {
-      font-family: 'DM Mono', monospace;
-      font-size: 9px;
-      font-weight: 500;
-      color: var(--ink-500);
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-    }
-
-    .metric-value {
-      font-family: 'DM Mono', monospace;
-      font-size: 11px;
-      font-weight: 500;
-      color: var(--gold);
-    }
-
-    .metric-sep {
-      width: 0.5px;
-      height: 14px;
-      background: var(--ink-300);
-    }
-
-    /* ── Main ── */
-    main {
-      padding: 2.5rem;
-      flex: 1;
-    }
-
-    .section-header {
-      display: flex;
-      align-items: baseline;
-      justify-content: space-between;
-      margin-bottom: 1.5rem;
-    }
-
-    .section-kicker {
-      font-family: 'DM Mono', monospace;
-      font-size: 10px;
-      font-weight: 500;
-      color: var(--ink-500);
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-    }
-
-    .section-count {
-      font-family: 'DM Mono', monospace;
-      font-size: 10px;
-      color: var(--ink-300);
-    }
-
-    /* ── Project cards ── */
-    .cards-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 1px;
-      background: var(--paper-300);
-      border: 0.5px solid var(--paper-300);
-      border-radius: 10px;
-      overflow: hidden;
-      margin-bottom: 3rem;
-    }
-
-    .project-card {
-      background: var(--paper-100);
-      padding: 1.5rem;
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-      min-height: 220px;
-      text-decoration: none;
-      color: inherit;
-      transition: background 0.15s;
-    }
-
-    .project-card:hover { background: var(--paper-200); }
-
-    .card-top {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-    }
-
-    .card-icon {
-      width: 36px;
-      height: 36px;
-      border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 16px;
-    }
-
-    .icon-gold { background: var(--gold-pale); color: var(--gold); }
-    .icon-terra { background: var(--terra-pale); color: var(--terra); }
-
-    .card-status {
-      font-family: 'DM Mono', monospace;
-      font-size: 9px;
-      font-weight: 500;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      padding: 3px 8px;
-      border-radius: 4px;
-    }
-
-    .status-active { background: var(--gold-pale); color: var(--gold); }
-    .status-beta   { background: var(--terra-pale); color: var(--terra); }
-
-    .card-body { flex: 1; }
-
-    .card-name {
-      font-family: 'DM Serif Display', serif;
-      font-size: 22px;
-      color: var(--ink-900);
-      margin-bottom: 0.35rem;
-      line-height: 1.2;
-    }
-
-    .card-desc {
-      font-size: 13px;
-      color: var(--ink-500);
-      line-height: 1.65;
-      font-weight: 300;
-    }
-
-    .card-footer {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding-top: 0.75rem;
-      border-top: 0.5px solid var(--paper-300);
-    }
-
-    .card-tags { display: flex; gap: 6px; flex-wrap: wrap; }
-
-    .tag {
-      font-family: 'DM Mono', monospace;
-      font-size: 9px;
       font-weight: 400;
-      color: var(--ink-500);
-      background: var(--paper-200);
-      padding: 2px 7px;
-      border-radius: 3px;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
     }
-
-    .card-link {
-      font-family: 'DM Mono', monospace;
+    .caps-xs {
+      font-family: 'JetBrains Mono', monospace;
       font-size: 9px;
-      color: var(--ink-300);
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      transition: color 0.15s;
+      letter-spacing: 0.32em;
       text-transform: uppercase;
-      letter-spacing: 0.06em;
-      white-space: nowrap;
-    }
-
-    .project-card:hover .card-link { color: var(--gold); }
-    .card-link i { font-size: 12px; }
-
-    /* ── Bench list ── */
-    .wip-section { margin-bottom: 3rem; }
-
-    .wip-list {
-      display: flex;
-      flex-direction: column;
-      gap: 0.5px;
-      background: var(--paper-300);
-      border: 0.5px solid var(--paper-300);
-      border-radius: 8px;
-      overflow: hidden;
-    }
-
-    .wip-item {
-      background: var(--paper-100);
-      padding: 1rem 1.25rem;
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-    }
-
-    .wip-num {
-      font-family: 'DM Mono', monospace;
-      font-size: 11px;
-      color: var(--ink-300);
-      min-width: 20px;
-    }
-
-    .wip-name {
-      font-size: 14px;
-      color: var(--ink-700);
-      flex: 1;
       font-weight: 400;
     }
 
-    .wip-type {
-      font-family: 'DM Mono', monospace;
-      font-size: 9px;
-      color: var(--ink-300);
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
+    /* Display sizing */
+    .display-xl {
+      font-family: 'Inter Tight', sans-serif;
+      font-weight: 200;
+      font-size: clamp(56px, 11.4vw, 168px);
+      line-height: 0.88;
+      letter-spacing: -0.045em;
+    }
+    .display-lg {
+      font-family: 'Inter Tight', sans-serif;
+      font-weight: 200;
+      font-size: clamp(48px, 8.4vw, 110px);
+      line-height: 0.92;
+      letter-spacing: -0.035em;
+    }
+    .display-md {
+      font-family: 'Inter Tight', sans-serif;
+      font-weight: 200;
+      font-size: clamp(36px, 5.4vw, 72px);
+      line-height: 0.96;
+      letter-spacing: -0.025em;
     }
 
-    /* ── Footer ── */
-    footer {
-      background: var(--ink-900);
-      padding: 1.25rem 2.5rem;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 0.75rem;
+    .italic-serif {
+      font-family: 'Instrument Serif', serif;
+      font-style: italic;
+      font-weight: 400;
     }
 
-    .footer-name {
-      font-family: 'DM Mono', monospace;
-      font-size: 10px;
-      color: var(--ink-700);
-      letter-spacing: 0.06em;
+    /* Crosshair corner marker */
+    .crosshair { position: relative; width: 7px; height: 7px; }
+    .crosshair::before, .crosshair::after {
+      content: ''; position: absolute; background: currentColor;
+    }
+    .crosshair::before { left: 50%; top: 0; bottom: 0; width: 1px; transform: translateX(-50%); }
+    .crosshair::after  { top: 50%; left: 0; right: 0; height: 1px; transform: translateY(-50%); }
+
+    /* Hairlines */
+    .hair { height: 1px; background: #211f1a; width: 100%; }
+    .hair-vert { width: 1px; background: #211f1a; }
+
+    /* Faint dotted underline animation utility */
+    .underline-grow {
+      background-image: linear-gradient(currentColor, currentColor);
+      background-size: 0% 1px;
+      background-repeat: no-repeat;
+      background-position: 0 100%;
+      transition: background-size 600ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    .group:hover .underline-grow,
+    .underline-grow:hover { background-size: 100% 1px; }
+
+    /* Subtle entry vignette to make hero feel like emerging from shadow */
+    .hero-vignette {
+      position: absolute; inset: 0; pointer-events: none;
+      background: radial-gradient(ellipse 80% 60% at 50% 50%, transparent 40%, #0c0b09 100%);
+      mix-blend-mode: multiply;
     }
 
-    .footer-link {
-      font-family: 'DM Mono', monospace;
-      font-size: 10px;
-      color: var(--ink-500);
-      text-decoration: none;
-      letter-spacing: 0.06em;
-      transition: color 0.15s;
+    /* Word-mask reveal */
+    .reveal-mask { display: inline-block; overflow: hidden; vertical-align: top; }
+    .reveal-inner { display: inline-block; will-change: transform; }
+
+    /* Spinning gold rune in invitation */
+    @keyframes slow-rotate { to { transform: rotate(360deg); } }
+    .slow-rotate { animation: slow-rotate 80s linear infinite; }
+
+    /* Inert input style */
+    input[type="email"]:focus { outline: none; }
+
+    /* Cursor */
+    .cursor-dot, .cursor-ring {
+      position: fixed; left: 0; top: 0; pointer-events: none; z-index: 9999;
+      mix-blend-mode: difference;
+    }
+    .cursor-dot { width: 4px; height: 4px; background: #e8e3d6; border-radius: 999px; transform: translate(-50%, -50%); }
+    .cursor-ring { width: 28px; height: 28px; border: 1px solid #e8e3d6; border-radius: 999px; transform: translate(-50%, -50%); transition: width 300ms, height 300ms, border-color 300ms; }
+    .cursor-ring.large { width: 60px; height: 60px; border-color: #c9a84c; }
+    .cursor-ring.dot-hide { opacity: 0; }
+
+    /* Static glitch line — one scanline of disruption near edge */
+    .glitch-bar {
+      position: absolute; left: 0; right: 0; height: 1px; background: #c9a84c; opacity: 0.0;
+      mix-blend-mode: screen;
     }
 
-    .footer-link:hover { color: var(--gold); }
-
-    /* ── Responsive ── */
-    @media (max-width: 600px) {
-      .masthead, main, .metrics-bar, footer { padding-left: 1.25rem; padding-right: 1.25rem; }
-      .metrics-bar { gap: 1rem; }
-      .metric-sep { display: none; }
+    /* Sparse list item border */
+    .row-hover:hover .row-bg { transform: scaleX(1); }
+    .row-bg {
+      transform-origin: left;
+      transform: scaleX(0);
+      transition: transform 700ms cubic-bezier(0.22, 1, 0.36, 1);
     }
+
+    /* Make sure SVG accents render crisply */
+    svg { shape-rendering: geometricPrecision; }
+
+    /* Hide scrollbar but keep scrolling */
+    body::-webkit-scrollbar { width: 0; height: 0; }
   </style>
 </head>
 <body>
+  <div id="root"></div>
 
-  <header class="masthead">
-    <div class="masthead-eyebrow">Byron Gronseth — experiments.byrongronseth.com</div>
-    <h1 class="masthead-title">Experiments</h1>
-    <p class="masthead-sub">Live projects, prototypes, and things I'm building in the open. Design-led, AI-assisted, always in motion.</p>
-    <nav class="masthead-nav" aria-label="Primary">
-      <a href="#" class="nav-link active">Projects</a>
-      <div class="nav-dot" aria-hidden="true"></div>
-      <a href="https://byrongronseth.com" class="nav-link">Portfolio</a>
-    </nav>
-  </header>
+  <script type="text/babel" data-presets="env,react">
+/* global React, FramerMotion */
+const { motion, AnimatePresence, useScroll, useTransform, useMotionValue, useSpring, useInView } = window.FramerMotion || window.Motion;
+const { useEffect, useRef, useState, useMemo, useLayoutEffect } = React;
 
-  <div class="metrics-bar" role="region" aria-label="Page stats">
-    <div class="metric-item">
-      <span class="metric-label">Projects</span>
-      <span class="metric-value">02</span>
+/* ─────────────────────────── PRIMITIVES ─────────────────────────── */
+
+// A small fixed crosshair + tick row pinned to the top of every section
+const SectionMeta = ({ index, label, count, kicker }) => (
+  <div className="flex items-baseline justify-between border-b border-ink-line pb-4 mb-12 sm:mb-20">
+    <div className="flex items-center gap-3 sm:gap-5 text-gold">
+      <span className="crosshair text-gold" />
+      <span className="caps text-gold">{index}</span>
+      <span className="caps text-bone/70">{label}</span>
     </div>
-    <div class="metric-sep" aria-hidden="true"></div>
-    <div class="metric-item">
-      <span class="metric-label">Stack</span>
-      <span class="metric-value">Lovable · Figma · Claude</span>
-    </div>
-    <div class="metric-sep" aria-hidden="true"></div>
-    <div class="metric-item">
-      <span class="metric-label">Updated</span>
-      <span class="metric-value">May 2026</span>
+    <div className="flex items-center gap-3 sm:gap-5">
+      {kicker && <span className="caps-xs text-ash hidden sm:inline">{kicker}</span>}
+      <span className="caps-xs text-ash">{count}</span>
     </div>
   </div>
+);
 
-  <main>
-
-    <div class="section-header">
-      <span class="section-kicker">01 — Live Projects</span>
-      <span class="section-count">2 active</span>
+// Reveal one or more lines of large text from a clip mask
+const RevealLines = ({ lines, delay = 0, className = '' }) => {
+  return (
+    <div className={className}>
+      {lines.map((line, i) => (
+        <div key={i} className="reveal-mask">
+          <motion.div
+            className="reveal-inner"
+            initial={{ y: '110%' }}
+            animate={{ y: '0%' }}
+            transition={{
+              duration: 1.4,
+              ease: [0.22, 1, 0.36, 1],
+              delay: delay + i * 0.12,
+            }}
+          >
+            {line}
+          </motion.div>
+        </div>
+      ))}
     </div>
+  );
+};
 
-    <div class="cards-grid">
+// Reveal a single span on view
+const FadeUp = ({ children, delay = 0, y = 24, className = '', once = true }) => {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once, margin: '0px 0px -10% 0px' });
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 1.0, ease: [0.22, 1, 0.36, 1], delay }}
+      className={className}
+    >
+      {children}
+    </motion.div>
+  );
+};
 
-     
-      <a href="https://nixology.app" target="_blank" rel="noopener noreferrer" class="project-card">
-        <div class="card-top">
-          <div class="card-icon icon-terra" aria-hidden="true">
-            <i class="ti ti-salad"></i>
-          </div>
-          <span class="card-status status-beta">Beta</span>
-        </div>
-        <div class="card-body">
-          <h2 class="card-name">Nixology</h2>
-          <p class="card-desc">Capture, rate, and share your favorite zero-proof drinks on the go. Build your personal non-alcoholic beverage collection, however the spirit guides you.</p>
-        </div>
-        <div class="card-footer">
-          <div class="card-tags">
-            <span class="tag">Lovable</span>
-            <span class="tag">Zero-Proof</span>
-            <span class="tag">Utility</span>
-          </div>
-          <span class="card-link" aria-label="Visit Nixology at nixology.app">nixology.app <i class="ti ti-external-link" aria-hidden="true"></i></span>
-        </div>
-      </a>
+// A horizontal hairline that draws in on view
+const DrawHair = ({ delay = 0, className = '' }) => {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: '0px 0px -20% 0px' });
+  return (
+    <motion.div
+      ref={ref}
+      className={`origin-left bg-ink-line h-px ${className}`}
+      style={{ transformOrigin: 'left' }}
+      initial={{ scaleX: 0 }}
+      animate={inView ? { scaleX: 1 } : {}}
+      transition={{ duration: 1.6, ease: [0.22, 1, 0.36, 1], delay }}
+    />
+  );
+};
 
-       <a href="https://recall-test.lovable.app/" target="_blank" rel="noopener noreferrer" class="project-card">
-        <div class="card-top">
-          <div class="card-icon icon-gold" aria-hidden="true">
-            <i class="ti ti-bookmark"></i>
-          </div>
-          <span class="card-status status-active">Active</span>
-        </div>
-        <div class="card-body">
-          <h2 class="card-name">Recall</h2>
-          <p class="card-desc">A personal knowledge tool and second brain for capturing and resurfacing what matters — articles, ideas, references — with AI assist built in from the start.</p>
-        </div>
-        <div class="card-footer">
-          <div class="card-tags">
-            <span class="tag">Lovable</span>
-            <span class="tag">Knowledge</span>
-            <span class="tag">AI</span>
-          </div>
-          <span class="card-link" aria-label="Visit Recall at recall-test.lovable.app">recall-test.lovable.app <i class="ti ti-external-link" aria-hidden="true"></i></span>
-        </div>
-      </a>
+/* ─────────────────────────── CURSOR ─────────────────────────── */
 
+const Cursor = () => {
+  const x = useMotionValue(-100);
+  const y = useMotionValue(-100);
+  const sx = useSpring(x, { damping: 38, stiffness: 320, mass: 0.4 });
+  const sy = useSpring(y, { damping: 38, stiffness: 320, mass: 0.4 });
+  const [variant, setVariant] = useState('default');
 
+  useEffect(() => {
+    const move = (e) => {
+      x.set(e.clientX);
+      y.set(e.clientY);
+    };
+    const over = (e) => {
+      const t = e.target.closest('[data-cursor]');
+      if (t) setVariant(t.dataset.cursor); else setVariant('default');
+    };
+    window.addEventListener('mousemove', move);
+    window.addEventListener('mouseover', over);
+    document.body.classList.add('has-cursor');
+    return () => {
+      window.removeEventListener('mousemove', move);
+      window.removeEventListener('mouseover', over);
+      document.body.classList.remove('has-cursor');
+    };
+  }, []);
+
+  return (
+    <div className="pointer-events-none">
+      <motion.div className="cursor-dot" style={{ x, y }} />
+      <motion.div
+        className={`cursor-ring ${variant === 'large' ? 'large' : ''}`}
+        style={{ x: sx, y: sy }}
+      />
     </div>
+  );
+};
 
-    <div class="wip-section">
-      <div class="section-header">
-        <span class="section-kicker">02 — On the Bench</span>
-        <span class="section-count">coming soon</span>
+/* ─────────────────────────── NAV ─────────────────────────── */
+
+const TopNav = () => (
+  <motion.header
+    className="fixed top-0 left-0 right-0 z-40 px-6 sm:px-10 py-6 flex items-center justify-between mix-blend-difference"
+    initial={{ opacity: 0, y: -10 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ duration: 1.2, delay: 0.6, ease: [0.22, 1, 0.36, 1] }}
+  >
+    <div className="flex items-center gap-3">
+      <span className="block w-2 h-2 rounded-full bg-gold" />
+      <span className="caps text-bone">B · G</span>
+    </div>
+    <nav className="hidden sm:flex items-center gap-8">
+      <a href="#works"      data-cursor="large" className="caps text-bone/70 hover:text-bone transition-colors duration-300">Works</a>
+      <a href="#bench"      data-cursor="large" className="caps text-bone/70 hover:text-bone transition-colors duration-300">Bench</a>
+      <a href="#provenance" data-cursor="large" className="caps text-bone/70 hover:text-bone transition-colors duration-300">Provenance</a>
+      <a href="#invitation" data-cursor="large" className="caps text-bone/70 hover:text-bone transition-colors duration-300">Invitation</a>
+    </nav>
+    <div className="flex items-center gap-3">
+      <span className="caps-xs text-ash hidden sm:block">MMXXVI · VOL · I</span>
+      <a href="https://byrongronseth.com" data-cursor="large" className="caps text-bone/70 hover:text-bone transition-colors duration-300">↩ Portfolio</a>
+    </div>
+  </motion.header>
+);
+
+/* ─────────────────────────── HERO ─────────────────────────── */
+
+const Hero = () => {
+  const ref = useRef(null);
+  const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end start'] });
+  const heroY = useTransform(scrollYProgress, [0, 1], [0, 180]);
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
+  const titleScale = useTransform(scrollYProgress, [0, 1], [1, 0.96]);
+
+  // live clock
+  const [time, setTime] = useState('');
+  useEffect(() => {
+    const tick = () => {
+      const d = new Date();
+      const hh = String(d.getUTCHours()).padStart(2, '0');
+      const mm = String(d.getUTCMinutes()).padStart(2, '0');
+      const ss = String(d.getUTCSeconds()).padStart(2, '0');
+      setTime(`${hh}:${mm}:${ss} UTC`);
+    };
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  return (
+    <section ref={ref} className="relative min-h-screen pt-28 pb-16 px-6 sm:px-10 flex flex-col justify-between overflow-hidden">
+      {/* Corner brackets — subtle cyberpunk frame */}
+      <CornerBracket pos="tl" />
+      <CornerBracket pos="tr" />
+      <CornerBracket pos="bl" />
+      <CornerBracket pos="br" />
+
+      {/* Top meta row */}
+      <motion.div
+        className="flex items-baseline justify-between"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 1.6, delay: 0.1 }}
+      >
+        <div className="flex items-center gap-4">
+          <span className="crosshair text-gold" />
+          <span className="caps text-bone/60">experiments · private archive</span>
+        </div>
+        <div className="flex items-center gap-4">
+          <span className="caps-xs text-ash">{time}</span>
+        </div>
+      </motion.div>
+
+      {/* Title block */}
+      <motion.div style={{ y: heroY, opacity: heroOpacity, scale: titleScale }} className="my-12 sm:my-16">
+        <div className="flex items-center gap-3 mb-8 sm:mb-12">
+          <FadeUp delay={0.2}><span className="caps text-gold">№ 001 — Volume One</span></FadeUp>
+        </div>
+
+        <h1 className="display-xl text-bone">
+          <RevealLines lines={['Experiments.']} delay={0.4} />
+        </h1>
+
+        <div className="mt-10 sm:mt-14 grid grid-cols-12 gap-6">
+          <div className="col-span-12 md:col-span-5">
+            <FadeUp delay={1.0} className="text-bone/70 text-base sm:text-lg leading-relaxed font-light">
+              A private archive of <span className="italic-serif text-gold">works in progress</span> —
+              prototypes, agents, and small machines built in the open. Design-led.
+              AI-assisted. Quiet by design.
+            </FadeUp>
+          </div>
+          <div className="hidden md:block md:col-span-2" />
+          <div className="col-span-12 md:col-span-5 flex md:justify-end items-end">
+            <FadeUp delay={1.2}>
+              <div className="space-y-2 text-right">
+                <div className="caps-xs text-ash">Curated by</div>
+                <div className="italic-serif text-bone text-2xl">Byron A. Gronseth</div>
+                <div className="caps-xs text-ash">experiments.byrongronseth.com</div>
+              </div>
+            </FadeUp>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Bottom strip — status line */}
+      <motion.div
+        className="flex items-end justify-between gap-6 pt-10 border-t border-ink-line"
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 1.2, delay: 1.4, ease: [0.22, 1, 0.36, 1] }}
+      >
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-10 flex-1">
+          <Stat label="Active works"  value="04" />
+          <Stat label="On the bench"  value="04" />
+          <Stat label="Established"   value="MMXX" />
+          <Stat label="Index" value="EXP-26-I" />
+        </div>
+        <a href="#works" data-cursor="large" className="hidden md:flex items-center gap-3 caps text-bone/60 hover:text-gold transition-colors duration-500">
+          <span>Enter</span>
+          <ScrollArrow />
+        </a>
+      </motion.div>
+    </section>
+  );
+};
+
+const Stat = ({ label, value }) => (
+  <div className="flex flex-col gap-1.5">
+    <span className="caps-xs text-ash">{label}</span>
+    <span className="font-mono text-bone text-sm tracking-wider">{value}</span>
+  </div>
+);
+
+const CornerBracket = ({ pos }) => {
+  const map = {
+    tl: 'top-3 left-3 border-t border-l',
+    tr: 'top-3 right-3 border-t border-r',
+    bl: 'bottom-3 left-3 border-b border-l',
+    br: 'bottom-3 right-3 border-b border-r',
+  };
+  return <span className={`absolute w-3.5 h-3.5 border-gold/50 ${map[pos]}`} />;
+};
+
+const ScrollArrow = () => (
+  <motion.div
+    initial={{ y: 0 }}
+    animate={{ y: [0, 4, 0] }}
+    transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
+    className="w-px h-7 bg-gold/60 relative"
+  >
+    <span className="absolute -bottom-1 -left-1 w-2 h-2 border-b border-r border-gold/60 rotate-45" />
+  </motion.div>
+);
+
+/* Components for later sections live below */
+
+/* ─────────────────────────── WORK CARD ─────────────────────────── */
+
+const WorkCard = ({ project, index }) => {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: '0px 0px -15% 0px' });
+  const [hover, setHover] = useState(false);
+
+  return (
+    <motion.a
+      ref={ref}
+      href={project.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      data-cursor="large"
+      className="group block relative border-t border-ink-line py-10 sm:py-14"
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      initial={{ opacity: 0, y: 40 }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1], delay: index * 0.15 }}
+    >
+      {/* Reveal stripe on hover */}
+      <motion.span
+        aria-hidden
+        className="absolute left-0 top-0 h-px bg-gold"
+        initial={{ width: '0%' }}
+        animate={{ width: hover ? '100%' : '0%' }}
+        transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
+      />
+
+      <div className="grid grid-cols-12 gap-6 items-start">
+        {/* Index + status */}
+        <div className="col-span-12 md:col-span-2 flex md:flex-col gap-4 md:gap-3">
+          <span className="caps-xs text-ash">{project.num}</span>
+          <span className={`caps-xs ${project.status === 'Active' ? 'text-gold' : 'text-bone/70'}`}>
+            ● {project.status}
+          </span>
+        </div>
+
+        {/* Title + body */}
+        <div className="col-span-12 md:col-span-6">
+          <motion.h3
+            className="display-md text-bone leading-[0.96]"
+            animate={{ x: hover ? 8 : 0 }}
+            transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+          >
+            {project.name}<span className="text-gold">.</span>
+          </motion.h3>
+          <p className="mt-4 sm:mt-6 max-w-md text-bone/65 text-sm sm:text-base leading-relaxed">
+            {project.desc}
+          </p>
+          <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2">
+            {project.tags.map((t, ti) => (
+              <span key={`${t}-${ti}`} className="caps-xs text-ash">— {t}</span>
+            ))}
+          </div>
+        </div>
+
+        {/* Visual sigil */}
+        <div className="col-span-12 md:col-span-4 flex md:justify-end">
+          <ProjectSigil kind={project.sigil} hover={hover} />
+        </div>
       </div>
-      <ul class="wip-list" role="list">
-        <li class="wip-item">
-          <span class="wip-num">01</span>
-          <span class="wip-name">Recruiter Hub</span>
-          <span class="wip-type">Product Design</span>
-        </li>
-        <li class="wip-item">
-          <span class="wip-num">02</span>
-          <span class="wip-name">Candidate Experience</span>
-          <span class="wip-type">Product Design</span>
-        </li>
-        <li class="wip-item">
-          <span class="wip-num">03</span>
-          <span class="wip-name">Screenshot Tool</span>
-          <span class="wip-type">Agent</span>
-        </li>
-        <li class="wip-item">
-          <span class="wip-num">04</span>
-          <span class="wip-name">WILD, tabletop role playing</span>
-          <span class="wip-type">Game System</span>
-        </li>
-      </ul>
+
+      {/* URL row */}
+      <div className="mt-8 md:mt-10 flex items-center justify-between gap-6">
+        <div className="caps-xs text-ash truncate">
+          <span className="text-gold">↗ </span>{project.urlLabel}
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="caps-xs text-bone/60 group-hover:text-gold transition-colors duration-500">Enter</span>
+          <motion.span
+            className="block w-8 h-px bg-bone/60 group-hover:bg-gold"
+            animate={{ scaleX: hover ? 1.6 : 1 }}
+            style={{ transformOrigin: 'left' }}
+            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+          />
+        </div>
+      </div>
+    </motion.a>
+  );
+};
+
+const ProjectSigil = ({ kind, hover }) => {
+  // Geometric monoline emblem — gold strokes on black
+  const size = 140;
+  return (
+    <motion.div
+      className="relative"
+      style={{ width: size, height: size }}
+      animate={{ rotate: hover ? 90 : 0 }}
+      transition={{ duration: 1.4, ease: [0.22, 1, 0.36, 1] }}
+    >
+      <svg viewBox="0 0 140 140" className="w-full h-full">
+        {/* Corner tick marks */}
+        <g stroke="#211f1a" strokeWidth="1" fill="none">
+          <path d="M0 8 L0 0 L8 0" />
+          <path d="M140 8 L140 0 L132 0" />
+          <path d="M0 132 L0 140 L8 140" />
+          <path d="M140 132 L140 140 L132 140" />
+        </g>
+        {kind === 'circle' && (
+          <g fill="none" stroke="#c9a84c" strokeWidth="0.8">
+            <circle cx="70" cy="70" r="48" />
+            <circle cx="70" cy="70" r="32" opacity="0.5" />
+            <circle cx="70" cy="70" r="16" opacity="0.25" />
+            <line x1="70" y1="14" x2="70" y2="126" opacity="0.4" />
+            <line x1="14" y1="70" x2="126" y2="70" opacity="0.4" />
+          </g>
+        )}
+        {kind === 'square' && (
+          <g fill="none" stroke="#c9a84c" strokeWidth="0.8">
+            <rect x="22" y="22" width="96" height="96" />
+            <rect x="38" y="38" width="64" height="64" opacity="0.5" />
+            <rect x="54" y="54" width="32" height="32" opacity="0.25" />
+            <line x1="22" y1="22" x2="118" y2="118" opacity="0.4" />
+            <line x1="118" y1="22" x2="22" y2="118" opacity="0.4" />
+          </g>
+        )}
+        {kind === 'triangle' && (
+          <g fill="none" stroke="#c9a84c" strokeWidth="0.8">
+            <polygon points="70,18 122,108 18,108" />
+            <polygon points="70,42 102,98 38,98" opacity="0.5" />
+            <polygon points="70,66 84,90 56,90" opacity="0.25" />
+          </g>
+        )}
+      </svg>
+    </motion.div>
+  );
+};
+
+/* Export to window */
+Object.assign(window, {
+  SectionMeta, RevealLines, FadeUp, DrawHair,
+  Cursor, TopNav, Hero, WorkCard, ProjectSigil, CornerBracket, ScrollArrow,
+});
+
+</script>
+<script type="text/babel" data-presets="env,react">
+/* global React, FramerMotion, Lenis */
+const { motion: M, AnimatePresence: AP, useScroll: useScroll2, useTransform: useTransform2, useInView: useInView2, useMotionValue: useMV, useSpring: useSp } = window.FramerMotion || window.Motion;
+const { useEffect: useEff, useRef: useR, useState: useS } = React;
+
+/* ─────────────────────────── DATA ─────────────────────────── */
+
+const PROJECTS = [
+  {
+    num: 'EXP / 001',
+    name: 'Nixology',
+    desc: "Capture, rate, and share zero-proof drinks on the go. A personal field guide for non-alcoholic beverages — wherever the spirit guides you.",
+    tags: ['Lovable', 'Zero-Proof', 'Utility'],
+    status: 'Beta',
+    url: 'https://nixology.app',
+    urlLabel: 'nixology.app',
+    sigil: 'triangle',
+    ingredients: ['Lovable', 'Claude', 'Field research', 'Hand-tasted'],
+    era: 'MMXXVI · I',
+  },
+  {
+    num: 'EXP / 002',
+    name: 'Recall',
+    desc: "A personal thinking partner and second brain for capturing and connecting ideas — articles, references, fragments — with AI assist built in from the start.",
+    tags: ['Lovable', 'Knowledge', 'AI'],
+    status: 'Active',
+    url: 'https://recall-test.lovable.app/',
+    urlLabel: 'recall-test.lovable.app',
+    sigil: 'circle',
+    ingredients: ['Lovable', 'Claude', 'Supabase', 'Tiptap', 'Source Serif 4'],
+    era: 'MMXXVI · I',
+  },
+  {
+    num: 'EXP / 003',
+    name: 'FPO Project',
+    desc: "Placeholder description. Replace with the real story when ready — what it does, who it's for, what makes it worth shipping.",
+    tags: ['TBD', 'TBD', 'TBD'],
+    status: 'Active',
+    url: '#',
+    urlLabel: 'tbd.example.com',
+    sigil: 'square',
+    ingredients: ['TBD'],
+    era: 'MMXXVI · I',
+  },
+  {
+    num: 'EXP / 004',
+    name: 'FPO Project',
+    desc: "Placeholder description. Replace with the real story when ready — what it does, who it's for, what makes it worth shipping.",
+    tags: ['TBD', 'TBD', 'TBD'],
+    status: 'Beta',
+    url: '#',
+    urlLabel: 'tbd.example.com',
+    sigil: 'circle',
+    ingredients: ['TBD'],
+    era: 'MMXXVI · I',
+  },
+];
+
+const BENCH = [
+  { num: '01', name: 'Recruiter Hub',           type: 'Product Design', era: 'In design'  },
+  { num: '02', name: 'Candidate Experience',    type: 'Product Design', era: 'In design'  },
+  { num: '03', name: 'Screenshot Tool',         type: 'Agent',          era: 'Prototype'  },
+  { num: '04', name: 'WILD — Tabletop RPG',     type: 'Game System',    era: 'Drafting'   },
+];
+
+/* ─────────────────────────── WORKS ─────────────────────────── */
+
+const Works = () => (
+  <section id="works" className="relative px-6 sm:px-10 pt-32 sm:pt-48 pb-24 sm:pb-32">
+    <SectionMeta index="§ 01" label="Live works" count={`${String(PROJECTS.length).padStart(2,'0')} active`} kicker="curated & maintained" />
+
+    {/* Interstitial — hidden for now, kept in code for later
+    <FadeUp>
+      <div className="grid grid-cols-12 gap-6 mb-20 sm:mb-28">
+        <div className="col-span-12 md:col-span-8 md:col-start-2">
+          <p className="display-md text-bone leading-[1.02]">
+            Pieces that have <span className="italic-serif text-gold">left the workshop</span> —
+            still moving, still being shaped.
+          </p>
+        </div>
+      </div>
+    </FadeUp>
+    */}
+    <div className="mb-10 sm:mb-16" />
+
+    <div className="border-b border-ink-line">
+      {PROJECTS.map((p, i) => (
+        <WorkCard key={p.num} project={p} index={i} />
+      ))}
+    </div>
+  </section>
+);
+
+/* ─────────────────────────── ON THE BENCH ─────────────────────────── */
+
+const Bench = () => {
+  return (
+    <section id="bench" className="relative px-6 sm:px-10 pt-32 sm:pt-48 pb-24 sm:pb-32 bg-ink">
+      <SectionMeta index="§ 02" label="On the bench" count={`${String(BENCH.length).padStart(2,'0')} in development`} kicker="not yet ready" />
+
+      {/* Interstitial — hidden for now, kept in code for later
+      <FadeUp>
+        <div className="grid grid-cols-12 gap-6 mb-16 sm:mb-24">
+          <div className="col-span-12 md:col-span-8 md:col-start-2">
+            <p className="display-md text-bone leading-[1.02]">
+              Drafts, sketches, and machines <span className="italic-serif text-gold">under glass</span>.
+              Released when they are ready and not before.
+            </p>
+          </div>
+        </div>
+      </FadeUp>
+      */}
+      <div className="mb-10 sm:mb-16" />
+
+      <div className="border-t border-ink-line">
+        {BENCH.map((item, i) => (
+          <BenchRow key={item.name} item={item} index={i} />
+        ))}
+      </div>
+    </section>
+  );
+};
+
+const BenchRow = ({ item, index }) => {
+  const ref = useR(null);
+  const inView = useInView2(ref, { once: true, margin: '0px 0px -10% 0px' });
+  const [hover, setHover] = useS(false);
+
+  return (
+    <M.div
+      ref={ref}
+      data-cursor="large"
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      className="group relative border-b border-ink-line py-7 sm:py-9 cursor-default"
+      initial={{ opacity: 0, y: 20 }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1], delay: index * 0.1 }}
+    >
+      {/* Sliding gold bar */}
+      <M.span
+        aria-hidden
+        className="absolute left-0 top-0 h-px bg-gold"
+        initial={{ width: '0%' }}
+        animate={{ width: hover ? '100%' : '0%' }}
+        transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
+      />
+      <div className="grid grid-cols-12 gap-4 items-baseline">
+        <div className="col-span-2 sm:col-span-1">
+          <span className="caps-xs text-ash">{item.num}</span>
+        </div>
+        <div className="col-span-10 sm:col-span-6 md:col-span-5 flex items-baseline gap-4">
+          <M.span
+            className="text-bone text-2xl sm:text-3xl md:text-4xl font-light tracking-tight"
+            animate={{ x: hover ? 10 : 0 }}
+            transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+          >
+            {item.name}
+          </M.span>
+        </div>
+        <div className="col-span-6 sm:col-span-3 md:col-span-4">
+          <span className="caps-xs text-bone/60">{item.type}</span>
+        </div>
+        <div className="col-span-6 sm:col-span-2 text-right">
+          <span className="caps-xs text-ash group-hover:text-gold transition-colors duration-500">{item.era}</span>
+        </div>
+      </div>
+    </M.div>
+  );
+};
+
+/* ─────────────────────────── PROVENANCE ─────────────────────────── */
+
+const Provenance = () => {
+  const ref = useR(null);
+  const inView = useInView2(ref, { once: true, margin: '0px 0px -20% 0px' });
+
+  return (
+    <section ref={ref} id="provenance" className="relative px-6 sm:px-10 pt-32 sm:pt-56 pb-32 sm:pb-48 overflow-hidden">
+      <SectionMeta index="§ 03" label="Provenance" count="origin & ingredients" kicker="for the curious" />
+
+      <div className="max-w-3xl mx-auto pt-12 sm:pt-20">
+        {/* Wine label card */}
+        <M.div
+          initial={{ opacity: 0, y: 40 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 1.4, ease: [0.22, 1, 0.36, 1] }}
+          className="relative border border-ink-line p-10 sm:p-16 md:p-20 text-center bg-ink-2"
+        >
+          {/* Ornamental corner ticks */}
+          <span className="absolute top-3 left-3 w-2.5 h-2.5 border-t border-l border-gold/60" />
+          <span className="absolute top-3 right-3 w-2.5 h-2.5 border-t border-r border-gold/60" />
+          <span className="absolute bottom-3 left-3 w-2.5 h-2.5 border-b border-l border-gold/60" />
+          <span className="absolute bottom-3 right-3 w-2.5 h-2.5 border-b border-r border-gold/60" />
+
+          {/* Rotating rune behind */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.05]">
+            <svg viewBox="0 0 400 400" className="w-[120%] h-[120%] slow-rotate">
+              <g fill="none" stroke="#c9a84c" strokeWidth="0.5">
+                <circle cx="200" cy="200" r="180" />
+                <circle cx="200" cy="200" r="140" />
+                <circle cx="200" cy="200" r="100" />
+                <circle cx="200" cy="200" r="60" />
+                <line x1="20" y1="200" x2="380" y2="200" />
+                <line x1="200" y1="20" x2="200" y2="380" />
+                <line x1="74" y1="74" x2="326" y2="326" />
+                <line x1="326" y1="74" x2="74" y2="326" />
+              </g>
+            </svg>
+          </div>
+
+          <div className="relative">
+            <div className="caps-xs text-gold mb-8 sm:mb-10">Établi · MMXX · Volume I</div>
+
+            <h3 className="font-italic italic-serif text-bone text-4xl sm:text-5xl md:text-6xl leading-tight mb-2">
+              Byron Gronseth
+            </h3>
+            <div className="caps text-bone/70 mb-10 sm:mb-14">— Creative · Design · AI —</div>
+
+            <DrawHair className="max-w-[120px] mx-auto mb-10 bg-gold/40" />
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-y-8 gap-x-6 mb-10 sm:mb-14 text-left max-w-2xl mx-auto">
+              <ProvCol label="Tools" items={['Lovable', 'Claude', 'Cursor', 'Figma']} />
+              <ProvCol label="Methods" items={['Design-led', 'AI-assisted', 'Built in the open']} />
+              <ProvCol label="Mood" items={['Restraint', 'Patience', 'Mass']} />
+              <ProvCol label="Origin" items={['Pacific NW', 'Made by hand', 'No haste']} />
+            </div>
+
+            <DrawHair className="max-w-[120px] mx-auto mb-10 bg-gold/40" delay={0.2} />
+
+            <p className="italic-serif text-bone/70 max-w-lg mx-auto text-lg sm:text-xl leading-snug">
+              "Released only when ready. Nothing here is fast. Nothing here is loud.
+              The signature is the restraint."
+            </p>
+
+            <div className="mt-10 caps-xs text-ash">Signed · BG</div>
+          </div>
+        </M.div>
+      </div>
+    </section>
+  );
+};
+
+const ProvCol = ({ label, items }) => (
+  <div>
+    <div className="caps-xs text-gold mb-3">— {label}</div>
+    <ul className="space-y-1.5">
+      {items.map((it) => (
+        <li key={it} className="text-bone/80 text-sm font-light">{it}</li>
+      ))}
+    </ul>
+  </div>
+);
+
+/* ─────────────────────────── INVITATION ─────────────────────────── */
+
+const Invitation = () => {
+  const [email, setEmail] = useS('');
+  const [sent, setSent] = useS(false);
+  const submit = (e) => {
+    e.preventDefault();
+    if (!email) return;
+    setSent(true);
+  };
+
+  return (
+    <section id="invitation" className="relative px-6 sm:px-10 pt-32 sm:pt-48 pb-24 sm:pb-32 bg-ink">
+      <SectionMeta index="§ 04" label="Invitation" count="by request only" kicker="hand-delivered" />
+
+      <div className="grid grid-cols-12 gap-6 mt-12 sm:mt-20">
+        <div className="col-span-12 md:col-span-7 md:col-start-2">
+          <FadeUp>
+            <p className="caps text-gold mb-8">To the curious —</p>
+          </FadeUp>
+          <FadeUp delay={0.1}>
+            <h2 className="display-md text-bone leading-[1.02]">
+              Receive new work <br />
+              <span className="italic-serif text-gold">when it is ready.</span>
+            </h2>
+          </FadeUp>
+
+          <FadeUp delay={0.2}>
+            <p className="mt-10 text-bone/65 text-base sm:text-lg leading-relaxed max-w-md">
+              Two or three messages a year. No announcements, no broadcasts.
+              A short letter when something has crossed the line from sketch to thing.
+            </p>
+          </FadeUp>
+        </div>
+
+        <div className="col-span-12 md:col-span-3 md:col-start-9 md:flex md:items-end mt-10 md:mt-0">
+          <FadeUp delay={0.3} className="w-full">
+            <AP mode="wait">
+              {!sent ? (
+                <M.form
+                  key="form"
+                  onSubmit={submit}
+                  className="relative"
+                  initial={{ opacity: 1 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.4 }}
+                >
+                  <div className="caps-xs text-ash mb-5">For correspondence —</div>
+                  <div className="flex items-baseline gap-3 border-b border-ink-line-2 pb-3 group focus-within:border-gold transition-colors duration-500">
+                    <input
+                      data-cursor="large"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      type="email"
+                      required
+                      placeholder="your.address@…"
+                      className="bg-transparent text-bone placeholder-ash/60 text-base sm:text-lg font-light flex-1 outline-none"
+                    />
+                    <M.button
+                      type="submit"
+                      data-cursor="large"
+                      className="caps text-bone group-focus-within:text-gold hover:text-gold transition-colors duration-300"
+                      whileHover={{ x: 4 }}
+                      whileTap={{ scale: 0.96 }}
+                      transition={{ type: 'spring', stiffness: 320, damping: 26 }}
+                    >
+                      Send →
+                    </M.button>
+                  </div>
+                  <div className="caps-xs text-ash/60 mt-3">— sealed, private, never resold —</div>
+                </M.form>
+              ) : (
+                <M.div
+                  key="sent"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ type: 'spring', stiffness: 240, damping: 28 }}
+                >
+                  <div className="caps text-gold mb-5">— Received —</div>
+                  <p className="italic-serif text-bone text-2xl leading-snug">
+                    Your address is noted. <br />
+                    Watch the post.
+                  </p>
+                </M.div>
+              )}
+            </AP>
+          </FadeUp>
+        </div>
+      </div>
+    </section>
+  );
+};
+
+/* ─────────────────────────── FOOTER ─────────────────────────── */
+
+const Foot = () => (
+  <footer className="px-6 sm:px-10 pt-16 pb-10 border-t border-ink-line">
+    <div className="grid grid-cols-12 gap-6 mb-12 sm:mb-20">
+      <div className="col-span-12 md:col-span-6">
+        <div className="display-md text-bone leading-none">
+          <span className="italic-serif text-gold">End</span> of volume.
+        </div>
+        <div className="mt-6 caps text-ash">EXP · MMXXVI · I</div>
+      </div>
+      <div className="col-span-6 md:col-span-3">
+        <div className="caps-xs text-ash mb-4">Studio</div>
+        <ul className="space-y-2">
+          <li><a href="https://byrongronseth.com" data-cursor="large" className="text-bone/70 hover:text-bone underline-grow text-sm">Main portfolio ↗</a></li>
+          <li><a href="mailto:hi@byrongronseth.com" data-cursor="large" className="text-bone/70 hover:text-bone underline-grow text-sm">Correspondence</a></li>
+        </ul>
+      </div>
+      <div className="col-span-6 md:col-span-3">
+        <div className="caps-xs text-ash mb-4">Index</div>
+        <ul className="space-y-2">
+          <li><a href="#works"      data-cursor="large" className="text-bone/70 hover:text-bone underline-grow text-sm">Live works</a></li>
+          <li><a href="#bench"      data-cursor="large" className="text-bone/70 hover:text-bone underline-grow text-sm">On the bench</a></li>
+          <li><a href="#provenance" data-cursor="large" className="text-bone/70 hover:text-bone underline-grow text-sm">Provenance</a></li>
+        </ul>
+      </div>
     </div>
 
-  </main>
-
-  <footer>
-    <span class="footer-name">Byron A. Gronseth — Design Director & Creative</span>
-    <a href="https://byrongronseth.com" class="footer-link">← Main portfolio</a>
+    <div className="flex flex-wrap items-center justify-between gap-4 border-t border-ink-line pt-6">
+      <div className="caps-xs text-ash">Byron A. Gronseth — Design Director & Creative</div>
+      <div className="caps-xs text-ash">No tracking · No noise</div>
+    </div>
   </footer>
+);
 
+/* ─────────────────────────── SCROLL PROGRESS RAIL ─────────────────────────── */
+
+const ScrollRail = () => {
+  const { scrollYProgress } = useScroll2();
+  const scaleY = useSp(scrollYProgress, { stiffness: 80, damping: 30, mass: 0.8 });
+  return (
+    <M.div
+      style={{ scaleY }}
+      className="fixed left-0 top-0 bottom-0 w-px bg-gold origin-top z-30"
+    />
+  );
+};
+
+/* Vertical side rail labels — cyberpunk technical chrome */
+const SideRail = () => (
+  <div className="hidden lg:block fixed top-1/2 -translate-y-1/2 right-4 z-30 pointer-events-none select-none">
+    <div className="flex flex-col items-center gap-4">
+      <span className="block w-px h-12 bg-ink-line" />
+      <span
+        className="caps-xs text-ash"
+        style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}
+      >
+        Private · Archive · No · Index
+      </span>
+      <span className="block w-px h-12 bg-ink-line" />
+      <span className="block w-1.5 h-1.5 rounded-full bg-gold" />
+    </div>
+  </div>
+);
+
+/* ─────────────────────────── ROOT ─────────────────────────── */
+
+const App = () => {
+  // Init Lenis with heavy momentum
+  useEff(() => {
+    if (typeof Lenis === 'undefined') return;
+    const lenis = new Lenis({
+      duration: 1.8,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      smoothWheel: true,
+      wheelMultiplier: 0.9,
+      touchMultiplier: 1.6,
+    });
+    let raf;
+    const loop = (time) => {
+      lenis.raf(time);
+      raf = requestAnimationFrame(loop);
+    };
+    raf = requestAnimationFrame(loop);
+
+    // Handle anchor links via Lenis for buttery jumps
+    const onClick = (e) => {
+      const a = e.target.closest('a[href^="#"]');
+      if (!a) return;
+      const id = a.getAttribute('href');
+      if (!id || id.length < 2) return;
+      const el = document.querySelector(id);
+      if (!el) return;
+      e.preventDefault();
+      lenis.scrollTo(el, { duration: 2.2, easing: (t) => 1 - Math.pow(1 - t, 4) });
+    };
+    document.addEventListener('click', onClick);
+
+    return () => {
+      cancelAnimationFrame(raf);
+      lenis.destroy();
+      document.removeEventListener('click', onClick);
+    };
+  }, []);
+
+  return (
+    <div className="relative bg-ink min-h-screen overflow-hidden">
+      <Cursor />
+      <ScrollRail />
+      <SideRail />
+      <TopNav />
+      <main>
+        <Hero />
+        <Works />
+        <Bench />
+        <Provenance />
+        <Invitation />
+      </main>
+      <Foot />
+    </div>
+  );
+};
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+
+</script>
 </body>
 </html>
