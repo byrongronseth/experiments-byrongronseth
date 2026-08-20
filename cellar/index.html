@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nixology — A Private Zero-Proof Cellar, In Your Pocket</title>
+  <meta name="description" content="Nixology is a members-only mobile app for the zero-proof drinker. Capture labels, archive your cellar, rate every pour, share the ones worth remembering." />
+
+  <meta property="og:title" content="Nixology — A Private Zero-Proof Cellar, In Your Pocket" />
+  <meta property="og:description" content="Capture, cellar, rate, and share zero-proof drinks. A private app for the considered drinker." />
+  <meta property="og:image" content="/cellar/assets/hero-phone.jpg" />
+  <meta name="twitter:image" content="/cellar/assets/hero-phone.jpg" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind — precompiled ahead of time, matching root index.html's approach -->
+  <link rel="stylesheet" href="/cellar/tailwind.css" />
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" integrity="sha384-DGyLxAyjq0f9SPpVevD6IgztCFlnMF6oW/XQGmfe+IsZ8TqEiDrcHkMLKI6fiB/Z" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" integrity="sha384-gTGxhz21lVGYNMcdJOyq01Edg0jhn/c22nsx0kyqP0TxaV5WVdsSH1fSDUf5YJj1" crossorigin="anonymous"></script>
+
+  <!-- Framer Motion UMD -->
+  <script src="https://cdn.jsdelivr.net/npm/framer-motion@10.18.0/dist/framer-motion.js"></script>
+
+  <!-- Lenis smooth scroll -->
+  <script src="https://cdn.jsdelivr.net/npm/lenis@1.1.20/dist/lenis.min.js"></script>
+
+  <style>
+    :root {
+      --background: oklch(0.13 0.04 295);
+      --foreground: oklch(0.96 0.01 280);
+      --bone: oklch(0.96 0.01 280);
+      --gold: oklch(0.58 0.20 320);
+      --gold-deep: oklch(0.66 0.22 320);
+      --teal: oklch(0.58 0.10 210);
+      --teal-glow: oklch(0.68 0.12 210);
+      --smoke: oklch(0.20 0.03 295);
+      --shadow: oklch(0.16 0.035 295);
+      --border: oklch(0.26 0.03 295);
+      --muted-foreground: oklch(0.62 0.02 290);
+    }
+
+    html, body {
+      background-color: var(--background);
+      color: var(--foreground);
+      font-family: 'Inter', system-ui, sans-serif;
+      font-weight: 300;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      overflow-x: hidden;
+    }
+
+    ::selection { background: var(--gold); color: var(--bone); }
+
+    .label {
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 10px;
+      font-weight: 400;
+      letter-spacing: 0.32em;
+      text-transform: uppercase;
+      color: var(--muted-foreground);
+    }
+    .label-gold {
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 10px;
+      font-weight: 400;
+      letter-spacing: 0.32em;
+      text-transform: uppercase;
+      color: var(--gold);
+    }
+    .label-teal {
+      font-family: 'Inter', system-ui, sans-serif;
+      font-size: 10px;
+      font-weight: 400;
+      letter-spacing: 0.32em;
+      text-transform: uppercase;
+      color: var(--teal);
+    }
+    .display {
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 300;
+      letter-spacing: -0.02em;
+      line-height: 0.95;
+    }
+    .hairline {
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* Lenis required */
+    html.lenis, html.lenis body { height: auto; }
+    .lenis.lenis-smooth { scroll-behavior: auto !important; }
+    .lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
+    .lenis.lenis-stopped { overflow: hidden; }
+    .lenis.lenis-smooth iframe { pointer-events: none; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script>
+/* global React, ReactDOM, FramerMotion, Lenis */
+const { motion, useScroll, useTransform, useInView } = window.FramerMotion || window.Motion;
+const { useEffect, useRef } = React;
+
+const DOWNLOAD_URL = "https://nixology.app";
+
+/* ─────────────────────────── PRIMITIVES ─────────────────────────── */
+
+function Reveal({ children, delay = 0, y = 40, className }) {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: "-10% 0px -10% 0px" });
+  return React.createElement(motion.div, {
+    ref: ref,
+    initial: { opacity: 0, y: y, filter: "blur(8px)" },
+    animate: inView ? { opacity: 1, y: 0, filter: "blur(0px)" } : {},
+    transition: { duration: 1.4, delay: delay, ease: [0.16, 1, 0.3, 1] },
+    className: className
+  }, children);
+}
+
+function Curtain({ children, delay = 0, className }) {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: "-15% 0px" });
+  return React.createElement("div", {
+    ref: ref,
+    className: `relative overflow-hidden ${className ?? ""}`
+  }, React.createElement(motion.div, {
+    initial: { y: "100%" },
+    animate: inView ? { y: "0%" } : {},
+    transition: { duration: 1.6, delay: delay, ease: [0.16, 1, 0.3, 1] }
+  }, children));
+}
+
+function useLenisScroll() {
+  useEffect(() => {
+    if (typeof Lenis === 'undefined') return;
+    const lenis = new Lenis({
+      duration: 1.6,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      smoothWheel: true,
+      wheelMultiplier: 0.9,
+      touchMultiplier: 1.2
+    });
+    let rafId;
+    function raf(time) {
+      lenis.raf(time);
+      rafId = requestAnimationFrame(raf);
+    }
+    rafId = requestAnimationFrame(raf);
+    return () => {
+      cancelAnimationFrame(rafId);
+      lenis.destroy();
+    };
+  }, []);
+}
+
+/* ─────────────────────────── NAV ─────────────────────────── */
+
+function Nav() {
+  return React.createElement(motion.header, {
+    initial: { opacity: 0, y: -20 },
+    animate: { opacity: 1, y: 0 },
+    transition: { duration: 1.4, delay: 0.4, ease: [0.16, 1, 0.3, 1] },
+    className: "fixed top-0 left-0 right-0 z-50 mix-blend-difference"
+  }, React.createElement("div", {
+    className: "flex items-center justify-between px-6 md:px-12 py-6"
+  },
+    React.createElement("a", { href: "#top", "aria-label": "Nixology", className: "block" },
+      React.createElement("img", {
+        src: "/cellar/assets/nixology-wordmark.png",
+        alt: "Nixology",
+        className: "h-5 md:h-6 w-auto",
+        style: { filter: "brightness(0) invert(1)" }
+      })
+    ),
+    React.createElement("nav", { className: "hidden md:flex items-center gap-12" },
+      React.createElement("a", { href: "#app", className: "label hover:text-bone transition-colors duration-500", style: { color: "#fff" } }, "The App"),
+      React.createElement("a", { href: "#features", className: "label hover:text-bone transition-colors duration-500", style: { color: "#fff" } }, "Features"),
+      React.createElement("a", { href: "#download", className: "label hover:text-bone transition-colors duration-500", style: { color: "#fff" } }, "Download")
+    ),
+    React.createElement("a", {
+      href: "https://nixology.app",
+      target: "_blank",
+      rel: "noreferrer",
+      className: "label hidden md:inline-block",
+      style: { color: "#fff" }
+    }, "nixology.app ↗")
+  ));
+}
+
+/* ─────────────────────────── HERO ─────────────────────────── */
+
+function Hero() {
+  const ref = useRef(null);
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
+  const imgY = useTransform(scrollYProgress, [0, 1], ["0%", "20%"]);
+  const imgScale = useTransform(scrollYProgress, [0, 1], [1, 1.06]);
+  const overlay = useTransform(scrollYProgress, [0, 1], [0.2, 0.8]);
+  const titleY = useTransform(scrollYProgress, [0, 1], ["0%", "-25%"]);
+
+  return React.createElement("section", { ref: ref, id: "top", className: "relative min-h-[110vh] overflow-hidden bg-background" },
+    React.createElement(motion.div, {
+      style: { y: imgY, scale: imgScale },
+      className: "absolute inset-y-0 right-0 w-full md:w-[60%] lg:w-[55%] pointer-events-none"
+    },
+      React.createElement("div", {
+        className: "absolute inset-0 pointer-events-none",
+        style: {
+          background: "radial-gradient(ellipse 60% 50% at 65% 45%, oklch(0.58 0.20 320 / 0.35) 0%, oklch(0.58 0.10 210 / 0.18) 45%, transparent 75%)",
+          filter: "blur(40px)"
+        }
+      }),
+      React.createElement(motion.img, {
+        src: "/cellar/assets/hero-phone.jpg",
+        alt: "Nixology app cellar screen on iPhone",
+        initial: { opacity: 0, scale: 1.08 },
+        animate: { opacity: 1, scale: 1 },
+        transition: { duration: 2.8, ease: [0.16, 1, 0.3, 1], delay: 0.2 },
+        className: "absolute inset-0 h-full w-full object-cover object-center"
+      }),
+      React.createElement(motion.div, { style: { opacity: overlay }, className: "absolute inset-0 bg-background" }),
+      React.createElement("div", {
+        className: "absolute inset-0 pointer-events-none",
+        style: { background: "linear-gradient(90deg, oklch(0.13 0.04 295) 0%, oklch(0.13 0.04 295 / 0.85) 25%, oklch(0.13 0.04 295 / 0) 60%)" }
+      }),
+      React.createElement("div", {
+        className: "absolute inset-0 pointer-events-none",
+        style: { background: "radial-gradient(ellipse at 70% 50%, transparent 30%, oklch(0.13 0.04 295 / 0.7) 85%)" }
+      })
+    ),
+    React.createElement("div", { className: "relative z-10 flex min-h-[110vh] flex-col justify-between px-6 md:px-12 pt-32 pb-12" },
+      React.createElement(motion.div, {
+        style: { y: titleY },
+        className: "flex-1 flex flex-col justify-center max-w-[1600px] mx-auto w-full"
+      },
+        React.createElement(Curtain, { delay: 0.6 }, React.createElement("span", { className: "label-gold" }, "N° 001 — Est. MMXXVI")),
+        React.createElement("div", { className: "mt-8 md:mt-12" },
+          React.createElement(Curtain, { delay: 0.9 }, React.createElement("h1", { className: "display text-bone text-[18vw] md:text-[12vw] lg:text-[110px] leading-[0.9]" }, "The quiet")),
+          React.createElement(Curtain, { delay: 1.1 }, React.createElement("h1", { className: "display text-bone text-[18vw] md:text-[12vw] lg:text-[110px] leading-[0.9] italic pl-[6vw] md:pl-[14vw]" }, "cellar,")),
+          React.createElement(Curtain, { delay: 1.25 }, React.createElement("h1", { className: "display text-bone text-[18vw] md:text-[12vw] lg:text-[110px] leading-[0.9] pl-[2vw] md:pl-[6vw]" },
+            "in your ", React.createElement("span", { className: "italic text-gold" }, "pocket.")
+          ))
+        ),
+        React.createElement(motion.p, {
+          initial: { opacity: 0, y: 20 },
+          animate: { opacity: 1, y: 0 },
+          transition: { duration: 1.6, delay: 1.8, ease: [0.16, 1, 0.3, 1] },
+          className: "mt-12 max-w-md text-sm leading-relaxed text-muted-foreground font-light"
+        }, "A private archive of zero-proof drinks — captured, cellared, rated, and quietly shared. By chefs and bartenders who measure pleasure in restraint."),
+        React.createElement(motion.div, {
+          initial: { opacity: 0, y: 20 },
+          animate: { opacity: 1, y: 0 },
+          transition: { duration: 1.6, delay: 2, ease: [0.16, 1, 0.3, 1] },
+          className: "mt-12"
+        }, React.createElement(DownloadButton, { label: "Download the App" }))
+      ),
+      React.createElement(motion.div, {
+        initial: { opacity: 0 },
+        animate: { opacity: 1 },
+        transition: { duration: 2, delay: 2.4 },
+        className: "flex items-end justify-between"
+      },
+        React.createElement("span", { className: "label" }, "Scroll — Slowly"),
+        React.createElement("span", { className: "label hidden md:inline" }, "No.A · Volume One")
+      )
+    )
+  );
+}
+
+/* ─────────────────────────── THE APP ─────────────────────────── */
+
+function TheApp() {
+  const ref = useRef(null);
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
+  const y = useTransform(scrollYProgress, [0, 1], ["8%", "-8%"]);
+
+  return React.createElement("section", { ref: ref, id: "app", className: "relative py-40 md:py-56 px-6 md:px-12" },
+    React.createElement("div", { className: "max-w-[1600px] mx-auto" },
+      React.createElement("div", { className: "grid grid-cols-12 gap-y-20 mb-24" },
+        React.createElement("div", { className: "col-span-12 md:col-span-3" },
+          React.createElement(Reveal, null, React.createElement("span", { className: "label-gold" }, "II — The App"))
+        ),
+        React.createElement("div", { className: "col-span-12 md:col-span-8 md:col-start-5" },
+          React.createElement(Reveal, { delay: 0.1 },
+            React.createElement("h2", { className: "display text-bone text-[10vw] md:text-[6vw] lg:text-[88px]" },
+              "A cellar that", React.createElement("br"),
+              React.createElement("span", { className: "italic text-teal" }, "fits in a hand.")
+            )
+          ),
+          React.createElement(Reveal, { delay: 0.25 },
+            React.createElement("p", { className: "mt-10 max-w-md text-sm leading-relaxed text-muted-foreground font-light" },
+              "Nixology is the quiet companion to your zero-proof practice. Every label you've considered, every pour you've remembered — kept in one private archive."
+            )
+          )
+        )
+      ),
+      React.createElement("div", { className: "grid grid-cols-12" },
+        React.createElement("div", { className: "col-span-12 md:col-span-10 md:col-start-2" },
+          React.createElement(Reveal, null,
+            React.createElement("div", { className: "relative overflow-hidden bg-shadow aspect-[16/10]" },
+              React.createElement(motion.img, {
+                src: "/cellar/assets/hero-phone.jpg",
+                alt: "Nixology app on iPhone",
+                loading: "lazy",
+                style: { y: y },
+                className: "absolute inset-0 h-[120%] w-full object-cover object-center"
+              }),
+              React.createElement("div", {
+                className: "absolute inset-0 pointer-events-none",
+                style: { background: "radial-gradient(ellipse at center, transparent 30%, rgba(12,11,9,0.5) 90%)" }
+              })
+            )
+          )
+        )
+      )
+    )
+  );
+}
+
+/* ─────────────────────────── FEATURES ─────────────────────────── */
+
+const features = [
+  {
+    n: "I.",
+    img: "/cellar/assets/feature-capture.jpg",
+    name: "Capture",
+    line: "Photograph any label.",
+    body: "Aim the camera at a zero-proof beer, spirit, or aperitif. Nixology reads the label and files it away — no typing, no fuss.",
+    tag: "Camera · Label OCR"
+  },
+  {
+    n: "II.",
+    img: "/cellar/assets/feature-cellar.jpg",
+    name: "Cellar",
+    line: "Archive what stays with you.",
+    body: "A private inventory of every bottle worth keeping. Organized by category, occasion, or mood — kept exactly as you'd lay it down in a real cellar.",
+    tag: "Personal archive"
+  },
+  {
+    n: "III.",
+    img: "/cellar/assets/feature-rate.jpg",
+    name: "Rate & Review",
+    line: "Tasting notes, quietly kept.",
+    body: "Score what you pour. Write the note that matters — bitter, smoke, salt, finish. A private journal of every drink you've measured.",
+    tag: "Reviews · Notes"
+  },
+  {
+    n: "IV.",
+    img: "/cellar/assets/feature-share.jpg",
+    name: "Share",
+    line: "Send a pour to a friend.",
+    body: "When something is worth remembering, send the photograph and the note to one person. No feed, no followers — correspondence, not broadcast.",
+    tag: "One-to-one"
+  }
+];
+
+function Features() {
+  return React.createElement("section", { id: "features", className: "relative py-40 md:py-56 px-6 md:px-12 bg-shadow" },
+    React.createElement("div", { className: "max-w-[1600px] mx-auto" },
+      React.createElement("div", { className: "grid grid-cols-12 gap-y-16 mb-32" },
+        React.createElement("div", { className: "col-span-12 md:col-span-3" },
+          React.createElement(Reveal, null, React.createElement("span", { className: "label-teal" }, "III — Capabilities"))
+        ),
+        React.createElement("div", { className: "col-span-12 md:col-span-9" },
+          React.createElement(Reveal, { delay: 0.1 },
+            React.createElement("h2", { className: "display text-bone text-[10vw] md:text-[6vw] lg:text-[88px] leading-[0.95]" },
+              "Four gestures,", React.createElement("br"),
+              React.createElement("span", { className: "italic text-gold" }, "nothing more.")
+            )
+          )
+        )
+      ),
+      React.createElement("div", { className: "space-y-32 md:space-y-48" },
+        features.map((f, i) => React.createElement(Feature, { key: f.n, feature: f, reverse: i % 2 === 1, index: i }))
+      )
+    )
+  );
+}
+
+function Feature({ feature, reverse, index }) {
+  const ref = useRef(null);
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
+  const y = useTransform(scrollYProgress, [0, 1], ["6%", "-6%"]);
+
+  return React.createElement("div", { ref: ref, className: "grid grid-cols-12 gap-6 md:gap-12 items-center" },
+    React.createElement("div", { className: `col-span-12 md:col-span-6 ${reverse ? "md:order-2 md:col-start-7" : ""}` },
+      React.createElement(Reveal, null,
+        React.createElement(motion.div, {
+          whileHover: { scale: 1.015 },
+          transition: { duration: 1.2, ease: [0.16, 1, 0.3, 1] },
+          className: "relative overflow-hidden bg-background aspect-[4/5] group"
+        },
+          React.createElement(motion.img, {
+            src: feature.img,
+            alt: `${feature.name} — Nixology app screen`,
+            loading: "lazy",
+            style: { y: y },
+            className: "absolute inset-0 h-[115%] w-full object-cover object-center"
+          }),
+          React.createElement("div", { className: "absolute bottom-6 left-6 right-6 flex items-end justify-between" },
+            React.createElement("span", { className: "label-gold opacity-0 group-hover:opacity-100 transition-opacity duration-700" }, `— ${feature.tag}`),
+            React.createElement("span", { className: "label", style: { color: "rgba(255,255,255,0.7)" } }, `${String(index + 1).padStart(2, "0")} / ${String(features.length).padStart(2, "0")}`)
+          )
+        )
+      )
+    ),
+    React.createElement("div", { className: `col-span-12 md:col-span-5 ${reverse ? "md:order-1 md:col-start-1" : "md:col-start-8"}` },
+      React.createElement(Reveal, { delay: 0.15 },
+        React.createElement("div", { className: "space-y-8" },
+          React.createElement("span", { className: `display text-5xl ${index % 2 === 1 ? "text-teal" : "text-gold"}` }, feature.n),
+          React.createElement("h3", { className: "display text-bone text-4xl md:text-5xl leading-tight" }, feature.name),
+          React.createElement("div", { className: `hairline w-16 ${index % 2 === 1 ? "bg-teal" : "bg-gold"}` }),
+          React.createElement("p", { className: "display text-bone text-2xl md:text-3xl italic leading-snug" }, feature.line),
+          React.createElement("p", { className: "text-sm text-muted-foreground font-light leading-relaxed max-w-md" }, feature.body),
+          React.createElement("div", { className: "pt-2" }, React.createElement("span", { className: "label" }, feature.tag))
+        )
+      )
+    )
+  );
+}
+
+/* ─────────────────────────── MANIFESTO ─────────────────────────── */
+
+function Manifesto() {
+  return React.createElement("section", { className: "py-40 md:py-56 px-6 md:px-12" },
+    React.createElement("div", { className: "max-w-[1100px] mx-auto" },
+      React.createElement(Reveal, null, React.createElement("span", { className: "label-gold" }, "IV — On Restraint")),
+      React.createElement("div", { className: "mt-16" },
+        React.createElement(Curtain, { delay: 0.2 },
+          React.createElement("p", { className: "display text-bone text-3xl md:text-5xl lg:text-6xl leading-[1.15]" },
+            "We do not chase the spirit.", React.createElement("br"),
+            React.createElement("span", { className: "text-muted-foreground" }, "We chase the "),
+            React.createElement("span", { className: "italic text-teal" }, "memory "),
+            React.createElement("span", { className: "text-muted-foreground" }, "of it —"),
+            React.createElement("br"),
+            "the bitter, the smoke, the salt,", React.createElement("br"),
+            React.createElement("span", { className: "text-muted-foreground" }, "held still on the tongue.")
+          )
+        )
+      ),
+      React.createElement(Reveal, { delay: 0.4 },
+        React.createElement("div", { className: "mt-24 flex justify-end" },
+          React.createElement("div", { className: "text-right space-y-2" },
+            React.createElement("div", { className: "hairline w-12 bg-gold ml-auto" }),
+            React.createElement("span", { className: "label" }, "The Cellarmaster, MMXXVI")
+          )
+        )
+      )
+    )
+  );
+}
+
+/* ─────────────────────────── DOWNLOAD ─────────────────────────── */
+
+function Download() {
+  const ref = useRef(null);
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
+  const y = useTransform(scrollYProgress, [0, 1], ["-6%", "6%"]);
+
+  return React.createElement("section", { id: "download", ref: ref, className: "relative py-40 md:py-56 px-6 md:px-12 bg-shadow overflow-hidden" },
+    React.createElement("div", { className: "max-w-[1600px] mx-auto" },
+      React.createElement("div", { className: "grid grid-cols-12 gap-y-20 items-center" },
+        React.createElement("div", { className: "col-span-12 md:col-span-5" },
+          React.createElement(Reveal, null, React.createElement("span", { className: "label-gold" }, "V — Download")),
+          React.createElement(Reveal, { delay: 0.1 },
+            React.createElement("h2", { className: "mt-12 display text-bone text-[12vw] md:text-[7vw] lg:text-[96px] leading-[0.9]" },
+              "By invitation.", React.createElement("br"),
+              React.createElement("span", { className: "italic text-gold" }, "On your device.")
+            )
+          ),
+          React.createElement(Reveal, { delay: 0.25 },
+            React.createElement("p", { className: "mt-10 max-w-md text-sm leading-relaxed text-muted-foreground font-light" },
+              "Nixology is free for members of the quiet cellar. Open the door when you're ready — we'll be here."
+            )
+          ),
+          React.createElement(Reveal, { delay: 0.4 },
+            React.createElement("div", { className: "mt-16" }, React.createElement(DownloadButton, { label: "Download Nixology" }))
+          )
+        ),
+        React.createElement("div", { className: "col-span-12 md:col-span-6 md:col-start-7" },
+          React.createElement(Reveal, { delay: 0.15 },
+            React.createElement("div", { className: "relative overflow-hidden bg-background aspect-[3/2]" },
+              React.createElement(motion.img, {
+                src: "/cellar/assets/download-duo.jpg",
+                alt: "Two iPhones showing the Nixology app",
+                loading: "lazy",
+                style: { y: y },
+                className: "absolute inset-0 h-[115%] w-full object-cover object-center"
+              }),
+              React.createElement("div", {
+                className: "absolute inset-0 pointer-events-none",
+                style: { background: "radial-gradient(ellipse at center, transparent 35%, rgba(12,11,9,0.6) 90%)" }
+              })
+            )
+          )
+        )
+      )
+    )
+  );
+}
+
+function DownloadButton({ label }) {
+  return React.createElement(motion.a, {
+    href: DOWNLOAD_URL,
+    target: "_blank",
+    rel: "noreferrer",
+    whileHover: "hover",
+    whileTap: { scale: 0.98 },
+    transition: { type: "spring", stiffness: 200, damping: 30, mass: 1.2 },
+    className: "group relative inline-flex items-center gap-6 py-6 pr-2 cursor-pointer"
+  },
+    React.createElement("span", { className: "label-gold relative z-10" }, label),
+    React.createElement(motion.span, {
+      className: "relative block h-px bg-gold",
+      initial: { width: 64 },
+      variants: { hover: { width: 140 } },
+      transition: { duration: 0.9, ease: [0.16, 1, 0.3, 1] }
+    }),
+    React.createElement(motion.span, {
+      className: "display text-gold text-2xl",
+      variants: { hover: { x: 6 } },
+      transition: { duration: 0.9, ease: [0.16, 1, 0.3, 1] }
+    }, "→")
+  );
+}
+
+/* ─────────────────────────── FOOTER ─────────────────────────── */
+
+function Footer() {
+  return React.createElement("footer", { className: "border-t border-border px-6 md:px-12 py-12" },
+    React.createElement("div", { className: "max-w-[1600px] mx-auto flex flex-col md:flex-row md:items-end justify-between gap-8" },
+      React.createElement("div", null,
+        React.createElement("img", {
+          src: "/cellar/assets/nixology-wordmark.png",
+          alt: "Nixology",
+          className: "h-5 w-auto",
+          style: { filter: "brightness(0) invert(1)" }
+        }),
+        React.createElement("span", { className: "label mt-3 block" }, "A private cellar · est. MMXXVI")
+      ),
+      React.createElement("div", { className: "flex flex-col md:flex-row gap-6 md:gap-12" },
+        React.createElement("a", { href: DOWNLOAD_URL, target: "_blank", rel: "noreferrer", className: "label hover:text-bone transition-colors duration-500" }, "nixology.app ↗"),
+        React.createElement("span", { className: "label" }, "Correspondence"),
+        React.createElement("span", { className: "label" }, "Colophon")
+      ),
+      React.createElement("span", { className: "label" }, "© Nixology Collective")
+    )
+  );
+}
+
+/* ─────────────────────────── ROOT ─────────────────────────── */
+
+function Landing() {
+  useLenisScroll();
+  return React.createElement("main", { className: "bg-background" },
+    React.createElement(Nav, null),
+    React.createElement(Hero, null),
+    React.createElement(TheApp, null),
+    React.createElement(Features, null),
+    React.createElement(Manifesto, null),
+    React.createElement(Download, null),
+    React.createElement(Footer, null)
+  );
+}
+
+const root = ReactDOM.createRoot(document.getElementById("root"));
+root.render(React.createElement(Landing, null));
+  </script>
+</body>
+</html>
