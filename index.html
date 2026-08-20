@@ -754,7 +754,11 @@ React.createElement("a", {
   href: "#tools",
   "data-cursor": "large",
   className: "caps text-bone/70 hover:text-bone glitch-flicker transition-colors duration-300"
-}, "Tools")), /*#__PURE__*/React.createElement("div", {
+}, "Tools"), /*#__PURE__*/React.createElement("a", {
+  href: "#build-notes",
+  "data-cursor": "large",
+  className: "caps text-bone/70 hover:text-bone glitch-flicker transition-colors duration-300"
+}, "Build notes")), /*#__PURE__*/React.createElement("div", {
   className: "flex items-center gap-3"
 }, /*#__PURE__*/React.createElement("span", {
   className: "caps-xs text-ash hidden sm:block"
@@ -2391,6 +2395,53 @@ const Subscribe = () => {
   }, "— no spam, ever —"))))));
 };
 
+/* ─────────────────────────── BUILD NOTES ─────────────────────────── */
+
+const BuildNotes = () => {
+  return /*#__PURE__*/React.createElement("section", {
+    id: "build-notes",
+    className: "relative px-6 sm:px-10 pt-32 sm:pt-48 pb-24 sm:pb-32 bg-ink"
+  }, /*#__PURE__*/React.createElement(SectionMeta, {
+    index: "§ 03",
+    label: "Build notes",
+    count: "01 case study",
+    kicker: "field notes, not a pitch"
+  }), /*#__PURE__*/React.createElement("div", {
+    className: "grid grid-cols-12 gap-6 mt-12 sm:mt-20 items-end"
+  }, /*#__PURE__*/React.createElement("div", {
+    className: "col-span-12 md:col-span-7"
+  }, /*#__PURE__*/React.createElement(FadeUp, null, /*#__PURE__*/React.createElement("h2", {
+    className: "display-md text-bone leading-[1.02]"
+  }, /*#__PURE__*/React.createElement(GlitchIn, {
+    delay: 350
+  }, "Building with AI"), " ", /*#__PURE__*/React.createElement("br", null), /*#__PURE__*/React.createElement(GlitchIn, {
+    delay: 550,
+    className: "italic-serif text-gold"
+  }, "lessons from the frontier."))), /*#__PURE__*/React.createElement(FadeUp, {
+    delay: 0.2
+  }, /*#__PURE__*/React.createElement("p", {
+    className: "mt-8 text-bone/65 text-base sm:text-lg leading-relaxed max-w-md"
+  }, "What shipping Nixology with Claude, Lovable, and a lot of trial and error actually taught me — written for friends and collaborators just getting started with AI tools.")), /*#__PURE__*/React.createElement(FadeUp, {
+    delay: 0.3,
+    className: "mt-10"
+  }, /*#__PURE__*/React.createElement(CtaButton, {
+    href: "https://experiments.byrongronseth.com/nixology",
+    variant: "primary",
+    external: true
+  }, "Read the build notes"))), /*#__PURE__*/React.createElement("div", {
+    className: "col-span-12 md:col-span-4 md:col-start-9 mt-14 md:mt-0"
+  }, /*#__PURE__*/React.createElement(FadeUp, {
+    delay: 0.25
+  }, /*#__PURE__*/React.createElement("p", {
+    className: "display-sm italic-serif text-bone/80 text-2xl sm:text-3xl leading-snug"
+  }, "“Writing clear prompts beats writing code.”"), /*#__PURE__*/React.createElement(DrawHair, {
+    delay: 0.5,
+    className: "w-12 mt-6"
+  }), /*#__PURE__*/React.createElement("span", {
+    className: "caps-xs text-ash mt-3 block"
+  }, "— Lesson 04")))));
+};
+
 /* ─────────────────────────── FOOTER ─────────────────────────── */
 
 const Foot = () => {
@@ -2640,7 +2691,7 @@ const App = () => {
     className: "relative bg-ink min-h-screen overflow-hidden"
   }, /*#__PURE__*/React.createElement(Cursor, null), /*#__PURE__*/React.createElement(Scanline, {
     volatility: volatilityLevel
-  }), /*#__PURE__*/React.createElement(ScrollRail, null), /*#__PURE__*/React.createElement(SideRail, null), /*#__PURE__*/React.createElement(TopNav, null), /*#__PURE__*/React.createElement("main", null, /*#__PURE__*/React.createElement(Hero, null), /*#__PURE__*/React.createElement(Projects, null), /* Bench section hidden for now: React.createElement(Bench, null), */ /* Subscribe section hidden until the newsletter is wired up: React.createElement(Subscribe, null), */ /*#__PURE__*/React.createElement(Tools, null)), /*#__PURE__*/React.createElement(Foot, null));
+  }), /*#__PURE__*/React.createElement(ScrollRail, null), /*#__PURE__*/React.createElement(SideRail, null), /*#__PURE__*/React.createElement(TopNav, null), /*#__PURE__*/React.createElement("main", null, /*#__PURE__*/React.createElement(Hero, null), /*#__PURE__*/React.createElement(Projects, null), /* Bench section hidden for now: React.createElement(Bench, null), */ /* Subscribe section hidden until the newsletter is wired up: React.createElement(Subscribe, null), */ /*#__PURE__*/React.createElement(Tools, null), /*#__PURE__*/React.createElement(BuildNotes, null)), /*#__PURE__*/React.createElement(Foot, null));
 };
 ReactDOM.createRoot(document.getElementById('root')).render(/*#__PURE__*/React.createElement(App, null));
 </script>
