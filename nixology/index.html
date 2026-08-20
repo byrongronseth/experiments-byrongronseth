@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nixology — Zero-proof spirits, summoned.</title>
+  <meta name="description" content="A dark, celestial cellar for the sober-curious. Discover, rate, and remember every zero-proof pour with Nixology." />
+  <meta property="og:title" content="Nixology — Zero-proof spirits, summoned." />
+  <meta property="og:description" content="A grimoire for the new pour. Phony negronis, hop water, zero-proof aperitifs — kept beside the friends who actually drink them." />
+  <meta property="og:type" content="website" />
+  <meta name="twitter:card" content="summary_large_image" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500;1,600&family=Nunito:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind — precompiled ahead of time -->
+  <link rel="stylesheet" href="/nixology/tailwind.css" />
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" integrity="sha384-DGyLxAyjq0f9SPpVevD6IgztCFlnMF6oW/XQGmfe+IsZ8TqEiDrcHkMLKI6fiB/Z" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" integrity="sha384-gTGxhz21lVGYNMcdJOyq01Edg0jhn/c22nsx0kyqP0TxaV5WVdsSH1fSDUf5YJj1" crossorigin="anonymous"></script>
+
+  <style>
+    :root {
+      --background: oklch(0.13 0.025 295);
+      --foreground: oklch(0.96 0.01 290);
+      --card: oklch(0.18 0.03 295);
+      --border: oklch(0.26 0.025 295);
+
+      --font-serif: 'EB Garamond', ui-serif, Georgia, serif;
+      --font-sans: 'Nunito', ui-sans-serif, system-ui, sans-serif;
+      --font-mono: 'Space Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+      --glass-bg: oklch(0.18 0.03 295 / 0.55);
+      --glass-border: oklch(0.5 0.1 300 / 0.18);
+      --shadow-glow: 0 0 60px -10px oklch(0.55 0.21 320 / 0.45);
+      --shadow-card: 0 24px 60px -24px oklch(0.05 0.02 290 / 0.8);
+    }
+
+    * { border-color: var(--border); box-sizing: border-box; }
+
+    html {
+      background-color: var(--background);
+      color: var(--foreground);
+      font-family: var(--font-sans);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    body {
+      margin: 0;
+      background-color: var(--background);
+      color: var(--foreground);
+      overflow-x: hidden;
+    }
+
+    h1, h2, h3, p { margin: 0; }
+
+    ::selection {
+      background: oklch(0.55 0.21 320 / 0.4);
+      color: oklch(0.99 0 0);
+    }
+
+    /* === Components === */
+    .glass-card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border: 1px solid var(--glass-border);
+      box-shadow: var(--shadow-card);
+    }
+
+    .text-gradient-purple {
+      background: linear-gradient(135deg, oklch(0.85 0.12 320), oklch(0.6 0.22 320));
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      color: transparent;
+    }
+
+    .glow-purple {
+      box-shadow: 0 0 40px -8px oklch(0.55 0.21 320 / 0.55);
+    }
+
+    .label-mono {
+      font-family: var(--font-mono);
+      text-transform: uppercase;
+      letter-spacing: 0.22em;
+      font-size: 0.7rem;
+      color: oklch(0.7 0.05 290);
+    }
+
+    /* === Scroll deck === */
+    .deck {
+      height: 100dvh;
+      overflow-y: auto;
+      scroll-snap-type: y mandatory;
+      scroll-behavior: smooth;
+      scrollbar-width: none;
+    }
+    .deck::-webkit-scrollbar { display: none; }
+
+    .slide {
+      scroll-snap-align: start;
+      scroll-snap-stop: always;
+      min-height: 100dvh;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 5rem 1.5rem;
+      overflow: hidden;
+    }
+
+    /* === Reveals === */
+    .reveal {
+      opacity: 0;
+      transform: translateY(28px);
+      transition: opacity 1s cubic-bezier(.2,.7,.2,1), transform 1s cubic-bezier(.2,.7,.2,1);
+    }
+    .reveal.in {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .reveal-delay-1 { transition-delay: .1s; }
+    .reveal-delay-2 { transition-delay: .25s; }
+    .reveal-delay-3 { transition-delay: .4s; }
+    .reveal-delay-4 { transition-delay: .55s; }
+
+    /* === Animations === */
+    @keyframes smoke-bloom {
+      0%   { transform: translate(-50%, -50%) scale(0.6); opacity: 0; }
+      40%  { opacity: 0.7; }
+      100% { transform: translate(-50%, -50%) scale(1.6); opacity: 0; }
+    }
+    @keyframes glow-pulse {
+      0%, 100% { opacity: 0.5; transform: scale(1); }
+      50%      { opacity: 0.9; transform: scale(1.05); }
+    }
+    @keyframes drift {
+      0%, 100% { transform: translate(0, 0); }
+      50%      { transform: translate(8px, -10px); }
+    }
+    @keyframes drift-slow {
+      0%, 100% { transform: translate(0, 0) rotate(0deg); }
+      50%      { transform: translate(-12px, 8px) rotate(3deg); }
+    }
+    @keyframes marquee {
+      from { transform: translateX(0); }
+      to   { transform: translateX(-50%); }
+    }
+    @keyframes twinkle {
+      0%, 100% { opacity: 0.2; }
+      50%      { opacity: 1; }
+    }
+    @keyframes scroll-cue {
+      0%   { transform: translateY(0); opacity: 0.8; }
+      100% { transform: translateY(10px); opacity: 0; }
+    }
+    @keyframes flicker {
+      0%, 100% { opacity: 0.55; }
+      43%      { opacity: 0.75; }
+      46%      { opacity: 0.4; }
+      49%      { opacity: 0.7; }
+    }
+    @keyframes fadeUpCard {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .animate-glow-pulse { animation: glow-pulse 6s ease-in-out infinite; }
+    .animate-drift { animation: drift 9s ease-in-out infinite; }
+    .animate-drift-slow { animation: drift-slow 14s ease-in-out infinite; }
+    .animate-marquee { animation: marquee 60s linear infinite; }
+    .animate-twinkle { animation: twinkle 4s ease-in-out infinite; }
+    .animate-flicker { animation: flicker 5s ease-in-out infinite; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .reveal { opacity: 1; transform: none; transition: none; }
+      .animate-glow-pulse, .animate-drift, .animate-drift-slow,
+      .animate-marquee, .animate-twinkle, .animate-flicker { animation: none; }
+      .deck { scroll-behavior: auto; }
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script>
+  /* global React, ReactDOM */
+  const { useState, useEffect, useRef, useMemo } = React;
+
+  const ASSET = (name) => '/nixology/assets/' + name;
+
+  /* ─────────────────────────── STARFIELD ─────────────────────────── */
+
+  const Starfield = ({ count = 90, className }) => {
+    const stars = useMemo(() => Array.from({ length: count }, (_, i) => ({
+      id: i,
+      top: Math.random() * 100,
+      left: Math.random() * 100,
+      size: Math.random() * 1.6 + 0.4,
+      delay: Math.random() * 4,
+      duration: 3 + Math.random() * 4,
+      opacity: 0.3 + Math.random() * 0.6
+    })), [count]);
+
+    return React.createElement('div', {
+      'aria-hidden': true,
+      className: className,
+      style: { position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden' }
+    }, stars.map((s) => React.createElement('span', {
+      key: s.id,
+      className: 'animate-twinkle',
+      style: {
+        position: 'absolute',
+        top: s.top + '%',
+        left: s.left + '%',
+        width: s.size + 'px',
+        height: s.size + 'px',
+        borderRadius: '50%',
+        background: 'oklch(0.96 0.01 290)',
+        opacity: s.opacity,
+        boxShadow: '0 0 4px oklch(0.85 0.12 320 / 0.5)',
+        animationDelay: s.delay + 's',
+        animationDuration: s.duration + 's'
+      }
+    })));
+  };
+
+  /* ─────────────────────────── SMOKE LAYER ─────────────────────────── */
+
+  const SmokeLayer = ({ variant = 'mixed', intensity = 1 }) => {
+    const purple = 'oklch(0.55 0.21 320 / 0.35)';
+    const teal = 'oklch(0.55 0.13 220 / 0.25)';
+    return React.createElement('div', {
+      'aria-hidden': true,
+      style: { position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden' }
+    },
+      (variant === 'purple' || variant === 'mixed') && React.createElement('div', {
+        className: 'animate-glow-pulse',
+        style: {
+          position: 'absolute', top: '30%', left: '20%',
+          width: '60vw', height: '60vw', maxWidth: '900px', maxHeight: '900px',
+          background: 'radial-gradient(circle, ' + purple + ' 0%, transparent 60%)',
+          filter: 'blur(40px)', opacity: 0.7 * intensity
+        }
+      }),
+      (variant === 'teal' || variant === 'mixed') && React.createElement('div', {
+        className: 'animate-glow-pulse',
+        style: {
+          position: 'absolute', bottom: '10%', right: '10%',
+          width: '50vw', height: '50vw', maxWidth: '700px', maxHeight: '700px',
+          background: 'radial-gradient(circle, ' + teal + ' 0%, transparent 60%)',
+          filter: 'blur(50px)', opacity: 0.6 * intensity, animationDelay: '2s'
+        }
+      })
+    );
+  };
+
+  /* ─────────────────────────── NIXOLOGY MARK ─────────────────────────── */
+
+  const NixologyMark = ({ className }) => React.createElement('span', {
+    className: className,
+    style: {
+      fontFamily: 'var(--font-serif)', fontWeight: 500, letterSpacing: '-0.02em',
+      display: 'inline-flex', alignItems: 'baseline', lineHeight: 1
+    }
+  },
+    React.createElement('span', null, 'N'),
+    React.createElement('span', { style: { position: 'relative', display: 'inline-block' } },
+      'ixology',
+      React.createElement('svg', {
+        viewBox: '0 0 24 24', 'aria-hidden': true,
+        style: { position: 'absolute', top: '-0.55em', left: '0.06em', width: '0.45em', height: '0.45em', color: 'oklch(0.96 0.01 290)' }
+      }, React.createElement('path', { d: 'M12 2 L13.4 9.4 L20.8 10.8 L13.4 12.2 L12 19.6 L10.6 12.2 L3.2 10.8 L10.6 9.4 Z', fill: 'currentColor' }))
+    )
+  );
+
+  /* ─────────────────────────── SIDE NAV ─────────────────────────── */
+
+  const SideNav = ({ slides, active, onJump }) => React.createElement('nav', {
+    'aria-label': 'Slide navigation',
+    style: {
+      position: 'fixed', right: '1.25rem', top: '50%', transform: 'translateY(-50%)',
+      zIndex: 50, display: 'flex', flexDirection: 'column', gap: '0.9rem'
+    }
+  }, slides.map((s, i) => {
+    const isActive = i === active;
+    return React.createElement('button', {
+      key: s.id,
+      onClick: () => onJump(i),
+      'aria-label': 'Go to slide ' + (i + 1) + ': ' + s.label,
+      'aria-current': isActive ? 'true' : undefined,
+      className: 'group',
+      style: {
+        position: 'relative', width: '10px', height: '10px', borderRadius: '999px',
+        background: isActive ? 'oklch(0.66 0.22 320)' : 'oklch(0.5 0.05 290 / 0.4)',
+        boxShadow: isActive ? '0 0 14px 2px oklch(0.66 0.22 320 / 0.7)' : 'none',
+        border: '1px solid oklch(0.5 0.1 300 / 0.25)',
+        transition: 'all 0.4s ease', cursor: 'pointer'
+      }
+    }, React.createElement('span', {
+      className: 'group-hover:!opacity-100',
+      style: {
+        position: 'absolute', right: '1.4rem', top: '50%', transform: 'translateY(-50%)',
+        fontFamily: 'var(--font-mono)', fontSize: '0.65rem', letterSpacing: '0.2em',
+        textTransform: 'uppercase', color: 'oklch(0.85 0.05 290)',
+        background: 'oklch(0.13 0.025 295 / 0.85)', padding: '0.3rem 0.6rem', borderRadius: '2px',
+        border: '1px solid oklch(0.5 0.1 300 / 0.2)', opacity: 0, pointerEvents: 'none',
+        whiteSpace: 'nowrap', transition: 'opacity 0.25s ease'
+      }
+    }, s.label));
+  }));
+
+  /* ─────────────────────────── SCROLL DECK ─────────────────────────── */
+
+  const ScrollDeck = ({ slides }) => {
+    const containerRef = useRef(null);
+    const sectionRefs = useRef([]);
+    const [active, setActive] = useState(0);
+
+    useEffect(() => {
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach((e) => {
+          const idx = Number(e.target.dataset.index);
+          if (e.isIntersecting && e.intersectionRatio >= 0.55) {
+            setActive(idx);
+          }
+          if (e.isIntersecting) {
+            e.target.querySelectorAll('.reveal').forEach((el) => el.classList.add('in'));
+          }
+        });
+      }, { root: containerRef.current, threshold: [0.2, 0.55, 0.8] });
+      sectionRefs.current.forEach((el) => el && observer.observe(el));
+      return () => observer.disconnect();
+    }, [slides.length]);
+
+    useEffect(() => {
+      const onKey = (e) => {
+        const tag = e.target && e.target.tagName;
+        if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+        let next = active;
+        if (['ArrowDown', 'PageDown', ' '].includes(e.key)) {
+          e.preventDefault();
+          next = Math.min(slides.length - 1, active + 1);
+        } else if (['ArrowUp', 'PageUp'].includes(e.key)) {
+          e.preventDefault();
+          next = Math.max(0, active - 1);
+        } else if (e.key === 'Home') {
+          e.preventDefault();
+          next = 0;
+        } else if (e.key === 'End') {
+          e.preventDefault();
+          next = slides.length - 1;
+        } else {
+          return;
+        }
+        jump(next);
+      };
+      window.addEventListener('keydown', onKey);
+      return () => window.removeEventListener('keydown', onKey);
+    }, [active, slides.length]);
+
+    const jump = (i) => {
+      const el = sectionRefs.current[i];
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+
+    return React.createElement(React.Fragment, null,
+      React.createElement('a', {
+        href: '#slide-cta',
+        style: { position: 'absolute', left: '-9999px', top: 0 },
+        onFocus: (e) => {
+          e.currentTarget.style.left = '1rem';
+          e.currentTarget.style.top = '1rem';
+          e.currentTarget.style.zIndex = '100';
+          e.currentTarget.style.background = 'oklch(0.55 0.21 320)';
+          e.currentTarget.style.color = 'white';
+          e.currentTarget.style.padding = '0.5rem 1rem';
+          e.currentTarget.style.borderRadius = '4px';
+        },
+        onBlur: (e) => { e.currentTarget.style.left = '-9999px'; }
+      }, 'Skip to call-to-action'),
+      React.createElement('div', { ref: containerRef, className: 'deck' },
+        slides.map((s, i) => React.createElement('section', {
+          key: s.id,
+          id: 'slide-' + s.id,
+          'data-index': i,
+          ref: (el) => { sectionRefs.current[i] = el; },
+          'aria-labelledby': 'heading-' + s.id,
+          className: 'slide'
+        }, s.node))
+      ),
+      React.createElement(SideNav, {
+        slides: slides.map((s) => ({ id: s.id, label: s.label })),
+        active: active,
+        onJump: jump
+      })
+    );
+  };
+
+  /* ─────────────────────────── HERO SLIDE ─────────────────────────── */
+
+  const HeroSlide = () => React.createElement(React.Fragment, null,
+    React.createElement(Starfield, { count: 120 }),
+    React.createElement('video', {
+      src: ASSET('purple-smoke.mp4'),
+      autoPlay: true, loop: true, muted: true, playsInline: true, 'aria-hidden': true,
+      style: {
+        position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover',
+        opacity: 0.55, mixBlendMode: 'screen', zIndex: 1, pointerEvents: 'none'
+      }
+    }),
+    React.createElement('div', {
+      'aria-hidden': true,
+      style: {
+        position: 'absolute', inset: 0,
+        background: 'radial-gradient(ellipse at center, transparent 35%, var(--background) 95%)',
+        zIndex: 1, pointerEvents: 'none'
+      }
+    }),
+    React.createElement('div', { style: { position: 'relative', textAlign: 'center', maxWidth: '60rem', zIndex: 2 } },
+      React.createElement('p', { className: 'label-mono reveal reveal-delay-1' }, 'Zero proof · Full ritual'),
+      React.createElement('h1', {
+        id: 'heading-hero', className: 'reveal reveal-delay-2',
+        style: { margin: '1.5rem auto 1.5rem', lineHeight: 0.95 }
+      }, React.createElement('img', {
+        src: ASSET('nixology-logo.png'), alt: 'Nixology',
+        style: {
+          display: 'block', width: 'min(82vw, 720px)', height: 'auto', margin: '0 auto',
+          filter: 'drop-shadow(0 0 24px oklch(0.55 0.21 320 / 0.55)) drop-shadow(0 0 60px oklch(0.55 0.21 320 / 0.35))'
+        }
+      })),
+      React.createElement('p', {
+        className: 'reveal reveal-delay-3',
+        style: {
+          fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: 'clamp(1.25rem, 2.6vw, 1.9rem)',
+          color: 'oklch(0.78 0.05 290)', maxWidth: '36rem', margin: '0 auto', lineHeight: 1.4
+        }
+      }, 'A potion without the poison —', React.createElement('br', null), 'a cellar for the sober-curious.'),
+      React.createElement('div', {
+        className: 'reveal reveal-delay-4',
+        style: {
+          position: 'absolute', bottom: '-7rem', left: '50%', transform: 'translateX(-50%)',
+          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem',
+          color: 'oklch(0.7 0.05 290)'
+        }
+      },
+        React.createElement('span', {
+          style: { fontFamily: 'var(--font-mono)', fontSize: '0.65rem', letterSpacing: '0.3em', textTransform: 'uppercase' }
+        }, 'Scroll to summon'),
+        React.createElement('svg', { width: 14, height: 22, viewBox: '0 0 14 22', fill: 'none', 'aria-hidden': true },
+          React.createElement('rect', { x: 1, y: 1, width: 12, height: 20, rx: 6, stroke: 'currentColor' }),
+          React.createElement('circle', { cx: 7, cy: 7, r: 1.5, fill: 'currentColor', style: { animation: 'scroll-cue 1.6s ease-in-out infinite' } })
+        )
+      )
+    )
+  );
+
+  /* ─────────────────────────── PROBLEM SLIDE ─────────────────────────── */
+
+  const ProblemSlide = () => React.createElement(React.Fragment, null,
+    React.createElement(SmokeLayer, { variant: 'purple', intensity: 0.6 }),
+    React.createElement('div', {
+      style: {
+        position: 'relative', zIndex: 2, display: 'grid', gridTemplateColumns: '1fr',
+        gap: '3rem', maxWidth: '80rem', width: '100%', alignItems: 'center'
+      },
+      className: 'md:!grid-cols-2'
+    },
+      React.createElement('div', { className: 'reveal reveal-delay-1' },
+        React.createElement('p', { className: 'label-mono' }, 'The spell'),
+        React.createElement('h2', {
+          id: 'heading-problem',
+          style: {
+            fontFamily: 'var(--font-serif)', fontWeight: 500, fontStyle: 'italic',
+            fontSize: 'clamp(2.5rem, 6vw, 5rem)', lineHeight: 1.05, margin: '1.25rem 0 0',
+            color: 'var(--foreground)'
+          }
+        }, 'Sober-curious,', React.createElement('br', null), React.createElement('span', { className: 'text-gradient-purple' }, 'not spirit-less.'))
+      ),
+      React.createElement('div', {
+        className: 'glass-card reveal reveal-delay-2',
+        style: { padding: '2.5rem', borderRadius: '8px', display: 'flex', flexDirection: 'column', gap: '1.25rem' }
+      },
+        React.createElement('p', { style: { fontSize: '1.05rem', lineHeight: 1.7, color: 'oklch(0.85 0.02 290)' } },
+          'The bar shrugged when you asked for something interesting without the alcohol. Recommendations? A flat soda water with lime.'),
+        React.createElement('p', { style: { fontSize: '1.05rem', lineHeight: 1.7, color: 'oklch(0.75 0.03 290)' } },
+          'Nixology is a grimoire for the new pour — phony negronis, hop water, zero-proof aperitifs — kept beside the friends who actually drink them.'),
+        React.createElement('p', {
+          style: {
+            fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: '1.15rem',
+            color: 'oklch(0.7 0.12 320)', borderTop: '1px solid oklch(0.5 0.1 300 / 0.2)', paddingTop: '1.25rem'
+          }
+        }, '"Brew the ritual. Skip the hangover."')
+      )
+    )
+  );
+
+  /* ─────────────────────────── PRODUCT SLIDE ─────────────────────────── */
+
+  const ProductSlide = () => React.createElement(React.Fragment, null,
+    React.createElement(SmokeLayer, { variant: 'mixed', intensity: 0.8 }),
+    React.createElement('div', { style: { position: 'relative', zIndex: 2, textAlign: 'center', maxWidth: '60rem', width: '100%' } },
+      React.createElement('p', { className: 'label-mono reveal reveal-delay-1' }, 'The brew'),
+      React.createElement('h2', {
+        id: 'heading-product', className: 'reveal reveal-delay-2',
+        style: { fontFamily: 'var(--font-serif)', fontWeight: 500, fontSize: 'clamp(2.25rem, 5vw, 3.75rem)', lineHeight: 1.1, margin: '1rem 0 3rem', color: 'var(--foreground)' }
+      }, 'Your cellar, ', React.createElement('em', { className: 'text-gradient-purple' }, 'conjured.')),
+      React.createElement('div', { style: { position: 'relative', width: 'min(280px, 70vw)', margin: '0 auto' }, className: 'reveal reveal-delay-3' },
+        React.createElement('div', {
+          className: 'animate-glow-pulse',
+          style: {
+            position: 'absolute', inset: '-30%',
+            background: 'radial-gradient(circle, oklch(0.55 0.21 320 / 0.45) 0%, transparent 65%)',
+            filter: 'blur(20px)', borderRadius: '50%', zIndex: 0
+          }
+        }),
+        React.createElement('div', {
+          style: {
+            position: 'relative', zIndex: 1, borderRadius: '2.5rem', padding: '0.6rem',
+            background: 'linear-gradient(160deg, oklch(0.3 0.05 295), oklch(0.15 0.03 295))',
+            border: '1px solid oklch(0.5 0.1 300 / 0.35)',
+            boxShadow: '0 0 80px -10px oklch(0.55 0.21 320 / 0.5), 0 30px 60px -20px oklch(0.05 0.02 290 / 0.9)'
+          }
+        }, React.createElement('img', {
+          src: ASSET('nixology-app-home.png'),
+          alt: 'Nixology app home screen showing total drinks, average rating, and a collection of zero-proof beers, cocktails, spirits, and wine.',
+          loading: 'lazy',
+          style: { width: '100%', display: 'block', borderRadius: '2rem' }
+        })),
+        React.createElement('img', {
+          src: ASSET('sigil-star.png'), alt: '', 'aria-hidden': true, loading: 'lazy', className: 'animate-drift',
+          style: { position: 'absolute', top: '-20%', right: '-30%', width: '120px', opacity: 0.85, filter: 'drop-shadow(0 0 20px oklch(0.55 0.21 320 / 0.5))' }
+        }),
+        React.createElement('img', {
+          src: ASSET('sigil-moon.png'), alt: '', 'aria-hidden': true, loading: 'lazy', className: 'animate-drift-slow',
+          style: { position: 'absolute', bottom: '-15%', left: '-40%', width: '160px', opacity: 0.7, filter: 'drop-shadow(0 0 20px oklch(0.55 0.21 320 / 0.4))' }
+        }),
+        React.createElement('img', {
+          src: ASSET('sigil-chalice.png'), alt: '', 'aria-hidden': true, loading: 'lazy', className: 'animate-drift',
+          style: { position: 'absolute', top: '30%', left: '-45%', width: '110px', opacity: 0.6, animationDelay: '1.5s', filter: 'drop-shadow(0 0 15px oklch(0.55 0.13 220 / 0.5))' }
+        })
+      )
+    )
+  );
+
+  /* ─────────────────────────── FEATURES SLIDE ─────────────────────────── */
+
+  const RITUALS = [
+    { no: '01', name: 'Discover', body: 'An oracle for what to pour next — dark beers, sparkling wines, phony aperitifs — matched to your taste.' },
+    { no: '02', name: 'Cellar', body: 'A grimoire of every zero-proof bottle and pour you\'ve tried. Rated, reviewed, remembered.' },
+    { no: '03', name: 'Conjure', body: 'Scan a label, snap a photo, or whisper it in. Your collection appears as if by magic.' }
+  ];
+
+  const FeaturesSlide = () => React.createElement(React.Fragment, null,
+    React.createElement(SmokeLayer, { variant: 'teal', intensity: 0.7 }),
+    React.createElement('div', { style: { position: 'relative', zIndex: 2, maxWidth: '80rem', width: '100%' } },
+      React.createElement('div', { style: { textAlign: 'center', marginBottom: '3.5rem' } },
+        React.createElement('p', { className: 'label-mono reveal reveal-delay-1' }, 'Three rituals'),
+        React.createElement('h2', {
+          id: 'heading-features', className: 'reveal reveal-delay-2',
+          style: { fontFamily: 'var(--font-serif)', fontWeight: 500, fontSize: 'clamp(2.25rem, 5vw, 3.75rem)', lineHeight: 1.1, margin: '1rem 0 0', color: 'var(--foreground)' }
+        }, 'Every pour, ', React.createElement('em', { className: 'text-gradient-purple' }, 'a small spell.'))
+      ),
+      React.createElement('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1.5rem' } },
+        RITUALS.map((r, i) => React.createElement('div', {
+          key: r.no,
+          className: 'glass-card reveal reveal-delay-' + (i + 2),
+          style: {
+            padding: '2.25rem', borderRadius: '8px', display: 'flex', flexDirection: 'column',
+            gap: '1.25rem', position: 'relative', overflow: 'hidden',
+            transition: 'transform 0.4s ease, box-shadow 0.4s ease', cursor: 'default'
+          },
+          onMouseEnter: (e) => {
+            e.currentTarget.style.transform = 'translateY(-4px)';
+            e.currentTarget.style.boxShadow = '0 0 50px -10px oklch(0.55 0.21 320 / 0.55), 0 30px 60px -25px oklch(0.05 0.02 290 / 0.9)';
+          },
+          onMouseLeave: (e) => {
+            e.currentTarget.style.transform = '';
+            e.currentTarget.style.boxShadow = '';
+          }
+        },
+          React.createElement('div', { style: { display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' } },
+            React.createElement('span', { className: 'label-mono', style: { color: 'oklch(0.75 0.12 320)' } }, 'Ritual ' + r.no),
+            React.createElement('span', { style: { fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: '2.5rem', color: 'oklch(0.5 0.08 290 / 0.6)', lineHeight: 1 } }, r.no)
+          ),
+          React.createElement('h3', { style: { fontFamily: 'var(--font-serif)', fontWeight: 500, fontSize: '2rem', color: 'var(--foreground)', margin: 0 } }, r.name),
+          React.createElement('p', { style: { fontSize: '0.98rem', lineHeight: 1.65, color: 'oklch(0.78 0.03 290)', margin: 0 } }, r.body)
+        ))
+      )
+    )
+  );
+
+  /* ─────────────────────────── GRIMOIRE SLIDE ─────────────────────────── */
+
+  const SPIRITS = [
+    'Phony Negroni', 'Lagunitas Hazy IPNA', 'Athletic All Out Stout', 'Leitz Eins Zwei Sparkling Rosé',
+    'St. Agrestis Phony', 'Golden Road Mango Cart NA', "Lyre's Italian Spritz", 'Seedlip Garden 108',
+    'Ghia Berry', 'Athletic Run Wild IPA', 'Free AF Spiced Rum', 'Töst Rosé'
+  ];
+
+  const GrimoireSlide = () => {
+    const row = SPIRITS.concat(SPIRITS);
+    return React.createElement(React.Fragment, null,
+      React.createElement('div', {
+        'aria-hidden': true,
+        style: { position: 'absolute', inset: 0, background: 'radial-gradient(ellipse at center, oklch(0.18 0.05 295) 0%, oklch(0.1 0.02 295) 70%)' }
+      }),
+      React.createElement('div', { style: { position: 'relative', zIndex: 2, width: '100%', textAlign: 'center' } },
+        React.createElement('p', { className: 'label-mono reveal reveal-delay-1' }, 'The grimoire'),
+        React.createElement('h2', {
+          id: 'heading-grimoire', className: 'reveal reveal-delay-2',
+          style: { fontFamily: 'var(--font-serif)', fontWeight: 500, fontSize: 'clamp(2.25rem, 5vw, 3.75rem)', lineHeight: 1.1, margin: '1rem 0 3.5rem', color: 'var(--foreground)' }
+        }, 'A whole library of ', React.createElement('em', { className: 'text-gradient-purple' }, 'other-worldly'), ' pours.'),
+        [0, 1].map((rowIdx) => React.createElement('div', {
+          key: rowIdx,
+          className: 'reveal reveal-delay-3',
+          style: {
+            overflow: 'hidden',
+            maskImage: 'linear-gradient(90deg, transparent, black 12%, black 88%, transparent)',
+            WebkitMaskImage: 'linear-gradient(90deg, transparent, black 12%, black 88%, transparent)',
+            padding: '1rem 0'
+          }
+        }, React.createElement('div', {
+          className: 'animate-marquee',
+          style: {
+            display: 'inline-flex', gap: '3rem', whiteSpace: 'nowrap',
+            animationDirection: rowIdx === 1 ? 'reverse' : 'normal',
+            animationDuration: rowIdx === 1 ? '75s' : '60s'
+          }
+        }, row.map((s, i) => React.createElement('span', {
+          key: i,
+          style: {
+            fontFamily: 'var(--font-serif)', fontStyle: rowIdx === 1 ? 'normal' : 'italic',
+            fontSize: 'clamp(1.75rem, 3.5vw, 2.75rem)', color: 'oklch(0.85 0.02 290)',
+            display: 'inline-flex', alignItems: 'center', gap: '3rem'
+          }
+        }, s, React.createElement('span', { style: { color: 'oklch(0.6 0.18 320)' } }, '✦')))))
+        )
+      )
+    );
+  };
+
+  /* ─────────────────────────── TESTIMONIAL SLIDE ─────────────────────────── */
+
+  const WHISPERS = [
+    { quote: "I finally have a place that takes my zero-proof obsession seriously. It's like Letterboxd for the sober-curious.", name: 'Maeve · Brooklyn, NY' },
+    { quote: 'Scanned a can of Athletic at the bodega and it was already in my cellar before I paid. Witchcraft.', name: 'Theo · Los Angeles, CA' },
+    { quote: "Beautiful, dark, and a little mystical. The opposite of every other 'wellness' app I've tried.", name: 'Priya · London, UK' }
+  ];
+
+  const TestimonialSlide = () => {
+    const [i, setI] = useState(0);
+    useEffect(() => {
+      const t = setInterval(() => setI((p) => (p + 1) % WHISPERS.length), 5500);
+      return () => clearInterval(t);
+    }, []);
+    const w = WHISPERS[i];
+
+    return React.createElement(React.Fragment, null,
+      React.createElement(SmokeLayer, { variant: 'purple', intensity: 0.5 }),
+      React.createElement('div', {
+        'aria-hidden': true, className: 'animate-flicker',
+        style: {
+          position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+          width: '60vw', height: '60vw', maxWidth: '700px', maxHeight: '700px',
+          background: 'radial-gradient(circle, oklch(0.6 0.18 320 / 0.35) 0%, transparent 60%)',
+          filter: 'blur(40px)', pointerEvents: 'none'
+        }
+      }),
+      React.createElement('div', { style: { position: 'relative', zIndex: 2, maxWidth: '44rem', width: '100%', textAlign: 'center' } },
+        React.createElement('p', { className: 'label-mono reveal reveal-delay-1' }, 'Whispers'),
+        React.createElement('h2', { id: 'heading-testimonial', style: { position: 'absolute', left: '-9999px' } }, 'What the coven says'),
+        React.createElement('div', {
+          className: 'reveal reveal-delay-2',
+          style: { display: 'flex', justifyContent: 'center', gap: '0.4rem', margin: '1.25rem 0 2rem', color: 'oklch(0.7 0.13 220)' }
+        }, Array.from({ length: 5 }).map((_, idx) => React.createElement('svg', {
+          key: idx, width: 22, height: 22, viewBox: '0 0 24 24', fill: 'currentColor', 'aria-hidden': true,
+          style: { filter: 'drop-shadow(0 0 6px oklch(0.55 0.13 220 / 0.7))' }
+        }, React.createElement('path', { d: 'M12 2 L14.4 9 L21.8 9.5 L16 14.3 L17.8 21.5 L12 17.5 L6.2 21.5 L8 14.3 L2.2 9.5 L9.6 9 Z' })))),
+        React.createElement('div', {
+          key: i, className: 'glass-card',
+          style: { padding: '3rem 2rem', borderRadius: '8px', animation: 'fadeUpCard 0.7s ease-out' }
+        },
+          React.createElement('p', {
+            style: { fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: 'clamp(1.4rem, 2.6vw, 2rem)', lineHeight: 1.4, color: 'oklch(0.92 0.02 290)', margin: 0 }
+          }, '"' + w.quote + '"'),
+          React.createElement('p', { className: 'label-mono', style: { marginTop: '1.75rem', color: 'oklch(0.7 0.05 290)' } }, '— ' + w.name)
+        ),
+        React.createElement('div', { style: { display: 'flex', justifyContent: 'center', gap: '0.5rem', marginTop: '1.75rem' } },
+          WHISPERS.map((_, idx) => React.createElement('button', {
+            key: idx,
+            onClick: () => setI(idx),
+            'aria-label': 'Whisper ' + (idx + 1),
+            style: {
+              width: idx === i ? '24px' : '8px', height: '8px', borderRadius: '999px',
+              background: idx === i ? 'oklch(0.66 0.22 320)' : 'oklch(0.4 0.05 290)',
+              border: 'none', transition: 'all 0.4s ease', cursor: 'pointer'
+            }
+          }))
+        )
+      )
+    );
+  };
+
+  /* ─────────────────────────── CTA SLIDE ─────────────────────────── */
+
+  const CtaSlide = () => React.createElement(React.Fragment, null,
+    React.createElement(Starfield, { count: 80 }),
+    React.createElement(SmokeLayer, { variant: 'mixed', intensity: 1.1 }),
+    React.createElement('div', { style: { position: 'relative', zIndex: 2, textAlign: 'center', maxWidth: '48rem', width: '100%' } },
+      React.createElement('div', { className: 'reveal reveal-delay-1', style: { display: 'flex', justifyContent: 'center', marginBottom: '2rem' } },
+        React.createElement('img', {
+          src: ASSET('nixology-app-tile.png'), alt: 'Nixology app icon',
+          style: {
+            width: 'clamp(96px, 14vw, 144px)', height: 'auto', borderRadius: '28px',
+            boxShadow: '0 0 40px oklch(0.55 0.21 320 / 0.55), 0 0 100px oklch(0.55 0.21 320 / 0.3), 0 10px 30px oklch(0 0 0 / 0.5)'
+          }
+        })
+      ),
+      React.createElement('p', { className: 'label-mono reveal reveal-delay-1' }, 'Join the coven'),
+      React.createElement('h2', {
+        id: 'heading-cta', className: 'reveal reveal-delay-2',
+        style: { fontFamily: 'var(--font-serif)', fontWeight: 500, fontSize: 'clamp(2.75rem, 7vw, 5.5rem)', lineHeight: 1.02, margin: '1rem 0 1.5rem', color: 'var(--foreground)' }
+      }, 'Pour something ', React.createElement('em', { className: 'text-gradient-purple' }, 'other-worldly.')),
+      React.createElement('p', {
+        className: 'reveal reveal-delay-3',
+        style: { fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: '1.25rem', color: 'oklch(0.78 0.05 290)', margin: '0 auto 3rem', maxWidth: '30rem', lineHeight: 1.5 }
+      }, "Download Nixology and start a cellar that won't leave you cursed in the morning."),
+      React.createElement('div', {
+        className: 'reveal reveal-delay-4',
+        style: { display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap', marginBottom: '4rem' }
+      },
+        React.createElement('a', {
+          href: '#', className: 'glow-purple',
+          style: {
+            padding: '1rem 2rem', borderRadius: '4px',
+            background: 'linear-gradient(135deg, oklch(0.6 0.22 320), oklch(0.45 0.18 320))',
+            color: 'white', textDecoration: 'none', fontFamily: 'var(--font-mono)', fontSize: '0.85rem',
+            letterSpacing: '0.18em', textTransform: 'uppercase', border: '1px solid oklch(0.7 0.18 320 / 0.5)',
+            transition: 'transform 0.3s ease'
+          },
+          onMouseEnter: (e) => { e.currentTarget.style.transform = 'translateY(-2px)'; },
+          onMouseLeave: (e) => { e.currentTarget.style.transform = ''; }
+        }, '⬇  App Store'),
+        React.createElement('a', {
+          href: '#',
+          style: {
+            padding: '1rem 2rem', borderRadius: '4px', background: 'oklch(0.18 0.03 295 / 0.6)',
+            color: 'oklch(0.92 0.02 290)', textDecoration: 'none', fontFamily: 'var(--font-mono)', fontSize: '0.85rem',
+            letterSpacing: '0.18em', textTransform: 'uppercase', border: '1px solid oklch(0.5 0.1 300 / 0.4)',
+            backdropFilter: 'blur(10px)', transition: 'transform 0.3s ease'
+          },
+          onMouseEnter: (e) => { e.currentTarget.style.transform = 'translateY(-2px)'; },
+          onMouseLeave: (e) => { e.currentTarget.style.transform = ''; }
+        }, '⬇  Google Play')
+      ),
+      React.createElement('div', {
+        className: 'reveal reveal-delay-4',
+        style: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', color: 'oklch(0.55 0.05 290)' }
+      },
+        React.createElement(NixologyMark, { className: 'text-gradient-purple' }),
+        React.createElement('p', { className: 'label-mono', style: { marginTop: '0.5rem', color: 'oklch(0.5 0.04 290)' } }, 'Zero-proof cellar · Made with moonlight')
+      )
+    )
+  );
+
+  /* ─────────────────────────── APP ─────────────────────────── */
+
+  const App = () => React.createElement('main', null, React.createElement(ScrollDeck, {
+    slides: [
+      { id: 'hero', label: 'Invocation', node: React.createElement(HeroSlide) },
+      { id: 'problem', label: 'The Spell', node: React.createElement(ProblemSlide) },
+      { id: 'product', label: 'The Brew', node: React.createElement(ProductSlide) },
+      { id: 'features', label: 'Three Rituals', node: React.createElement(FeaturesSlide) },
+      { id: 'grimoire', label: 'The Grimoire', node: React.createElement(GrimoireSlide) },
+      { id: 'testimonial', label: 'Whispers', node: React.createElement(TestimonialSlide) },
+      { id: 'cta', label: 'Join the Coven', node: React.createElement(CtaSlide) }
+    ]
+  }));
+
+  ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(App));
+  </script>
+</body>
+</html>
